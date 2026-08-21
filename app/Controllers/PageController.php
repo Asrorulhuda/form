@@ -61,10 +61,45 @@ class PageController
 
         $items = json_decode($this->settings->get('page_features_items', '[]'), true) ?: [];
 
+        if (empty($items)) {
+            $items = [
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+                    'title' => '18+ Dynamic Field Types',
+                    'desc' => 'Mendukung input teks, email, number, tanggal/waktu, dropdown, file upload, rating, hingga canvas digital signature.'
+                ],
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+                    'title' => 'Smart Template Generator',
+                    'desc' => 'Buat template surat dengan tag variabel dinamis seperti {{nama}}, {{tanggal}}, dan {{nomor_surat}} secara otomatis.'
+                ],
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7z"/><path d="M14 7h3v3h-3z"/><path d="M7 14h3v3H7z"/><path d="M14 14h3v3h-3z"/></svg>',
+                    'title' => 'QR Code Verification',
+                    'desc' => 'Setiap dokumen resmi yang terbit dilengkapi token unik dan QR Code untuk verifikasi keabsahan secara publik.'
+                ],
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+                    'title' => 'Nomor Surat Otomatis',
+                    'desc' => 'Penomoran surat fleksibel dengan format romawi, kode seksi, dan reset sequence tahunan/bulanan otomatis.'
+                ],
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>',
+                    'title' => 'Approval Workflow',
+                    'desc' => 'Mekanisme persetujuan dokumen berjenjang dari Operator, Editor, Approver hingga diterbitkan dan diarsipkan.'
+                ],
+                [
+                    'icon' => '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+                    'title' => 'Aman & Terverifikasi',
+                    'desc' => 'Dilengkapi proteksi CSRF, enkripsi password bcrypt, PDO prepared statements, dan pencatatan audit log lengkap.'
+                ],
+            ];
+        }
+
         View::render('pages.features', array_merge($this->getPublicData(), [
-            'title'    => $this->settings->get('page_features_title', 'Fitur') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
-            'pageTitle'  => $this->settings->get('page_features_title', 'Fitur'),
-            'pageSubtitle' => $this->settings->get('page_features_subtitle', ''),
+            'title'        => $this->settings->get('page_features_title', 'Fitur Lengkap') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
+            'pageTitle'    => $this->settings->get('page_features_title', 'Fitur Lengkap'),
+            'pageSubtitle' => $this->settings->get('page_features_subtitle', 'Solusi terintegrasi untuk pembuatan formulir online dan otomasi dokumen resmi.'),
             'featureItems' => $items,
         ]), 'public');
     }
@@ -79,11 +114,21 @@ class PageController
             return;
         }
 
+        $content = $this->settings->get('page_about_content', '');
+        if (empty($content)) {
+            $content = "ASR FORM adalah platform digital yang dirancang khusus untuk mempermudah instansi, lembaga pendidikan, perusahaan, dan organisasi dalam mengumpulkan data melalui formulir digital dinamis serta mengonversinya secara otomatis menjadi dokumen resmi.\n\nDengan arsitektur modern berbasis PHP Native, sistem kami menghadirkan kecepatan loading maksimal, keamanan tinggi dengan enkripsi tingkat lanjut, dan kemudahan kustomisasi tanpa batas.";
+        }
+
+        $vision = $this->settings->get('page_about_vision', '');
+        if (empty($vision)) {
+            $vision = "Menjadi platform nomor satu untuk digitalisasi dokumen dan otomasi administrasi yang andal, cepat, dan aman bagi seluruh instansi di Indonesia.";
+        }
+
         View::render('pages.about', array_merge($this->getPublicData(), [
-            'title'       => $this->settings->get('page_about_title', 'Tentang') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
-            'pageTitle'   => $this->settings->get('page_about_title', 'Tentang'),
-            'pageContent' => $this->settings->get('page_about_content', ''),
-            'pageVision'  => $this->settings->get('page_about_vision', ''),
+            'title'       => $this->settings->get('page_about_title', 'Tentang Kami') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
+            'pageTitle'   => $this->settings->get('page_about_title', 'Tentang Kami'),
+            'pageContent' => $content,
+            'pageVision'  => $vision,
         ]), 'public');
     }
 
@@ -199,10 +244,59 @@ class PageController
 
         $items = json_decode($this->settings->get('page_pricing_items', '[]'), true) ?: [];
 
+        if (empty($items)) {
+            $items = [
+                [
+                    'name' => 'Starter',
+                    'price' => 'Rp 0',
+                    'period' => 'selamanya',
+                    'desc' => 'Cocok untuk pengguna individual atau uji coba awal pembuatan formulir.',
+                    'features' => [
+                        'Hingga 5 Formulir Aktif',
+                        '100 Respons per Formulir',
+                        'Semua Tipe Field Dinamis',
+                        'Export Data CSV & Excel',
+                    ],
+                    'cta' => 'Mulai Gratis',
+                    'highlighted' => false,
+                ],
+                [
+                    'name' => 'Profesional',
+                    'price' => 'Rp 99.000',
+                    'period' => 'bulan',
+                    'desc' => 'Solusi lengkap untuk instansi, UMKM, dan organisasi modern.',
+                    'features' => [
+                        'Unlimited Formulir & Respons',
+                        'Smart Document Generator Otomatis',
+                        'Nomor Surat Dinamis & QR Verify',
+                        'Approval Workflow Berjenjang',
+                        'Digital Signature & Export PDF Resmi',
+                    ],
+                    'cta' => 'Pilih Paket Pro',
+                    'highlighted' => true,
+                ],
+                [
+                    'name' => 'Enterprise',
+                    'price' => 'Rp 299.000',
+                    'period' => 'bulan',
+                    'desc' => 'Untuk organisasi skala besar dengan volume tinggi dan integrasi khusus.',
+                    'features' => [
+                        'Semua Fitur Profesional',
+                        'Multi User & 6 Role Fleksibel',
+                        'Integrasi Webhook & API Kustom',
+                        'Audit Trail & Keamanan Maksimal',
+                        'Prioritas Support WhatsApp 24/7',
+                    ],
+                    'cta' => 'Hubungi Sales',
+                    'highlighted' => false,
+                ],
+            ];
+        }
+
         View::render('pages.pricing', array_merge($this->getPublicData(), [
-            'title'        => $this->settings->get('page_pricing_title', 'Pricing') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
+            'title'        => $this->settings->get('page_pricing_title', 'Paket & Harga') . ' — ' . $this->settings->get('site_name', 'ASR FORM'),
             'pageTitle'    => $this->settings->get('page_pricing_title', 'Paket & Harga'),
-            'pageSubtitle' => $this->settings->get('page_pricing_subtitle', ''),
+            'pageSubtitle' => $this->settings->get('page_pricing_subtitle', 'Pilih paket yang paling sesuai dengan kebutuhan formulir dan otomasi dokumen Anda.'),
             'pricingItems' => $items,
         ]), 'public');
     }
