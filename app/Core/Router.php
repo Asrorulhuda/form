@@ -78,8 +78,8 @@ class Router
             $pattern = $this->convertToRegex($route['path']);
 
             if (preg_match($pattern, $url, $matches)) {
-                // Extract named parameters
-                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                // Extract route parameters as sequential positional arguments for PHP 8 compatibility
+                $params = array_values(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY));
 
                 // Run middleware
                 foreach ($route['middleware'] as $mw) {
