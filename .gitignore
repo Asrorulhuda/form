@@ -21,9 +21,9 @@
 *.sql.zip
 database/dumps/
 database/backups/
-# Hanya izinkan skrip migrasi & seeder bawaan jika diperlukan:
-!database/migrations/*.sql
-!database/seeders/*.sql
+# Hanya izinkan skrip migrasi & seeder master:
+!database/migration.sql
+!database/seed.sql
 
 # ═══════════════════════════════════════════
 # Composer & Dependencies
