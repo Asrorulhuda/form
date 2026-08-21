@@ -18,6 +18,9 @@ class WordTemplateEngine
      */
     public static function extractVariables(string $docxPath): array
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
+
         if (!file_exists($docxPath)) {
             throw new \Exception("Berkas template Word tidak ditemukan di: {$docxPath}");
         }
@@ -32,7 +35,7 @@ class WordTemplateEngine
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $filename = $zip->getNameIndex($i);
-            if (preg_match('#^word/(header|footer)\d+\.xml$#', $filename)) {
+            if ($filename && preg_match('#^word/(header|footer)\d+\.xml$#', $filename)) {
                 $xmlParts[] = $filename;
             }
         }
@@ -41,16 +44,17 @@ class WordTemplateEngine
 
         foreach ($xmlParts as $xmlFile) {
             $xmlContent = $zip->getFromName($xmlFile);
-            if (!$xmlContent) continue;
+            if (!$xmlContent || strpos($xmlContent, '{') === false) {
+                unset($xmlContent);
+                continue;
+            }
 
-            // 1. Clean XML by stripping tags between curly braces to resolve Word run-splitting
-            // E.g. {<w:r><w:t>{</w:t></w:r><w:r><w:t>nama_siswa</w:t></w:r><w:r><w:t>}</w:t></w:r>}
+            // Clean XML by stripping tags between curly braces to resolve Word run-splitting
             $normalizedXml = preg_replace_callback('/\{\{([^{}]+)\}\}/s', function ($matches) {
                 return '{{' . strip_tags($matches[1]) . '}}';
             }, $xmlContent);
 
-            // Also strip inner XML tags inside fragmented {{ ... }}
-            $cleanText = strip_tags($xmlContent);
+            $cleanText = strip_tags($normalizedXml ?: $xmlContent);
             preg_match_all('/\{\{([^{}]+)\}\}/', $cleanText, $matches1);
             if (!empty($matches1[1])) {
                 foreach ($matches1[1] as $v) {
@@ -60,9 +64,11 @@ class WordTemplateEngine
                     }
                 }
             }
+            unset($xmlContent, $normalizedXml, $cleanText, $matches1);
         }
 
         $zip->close();
+        unset($zip);
 
         // Also use TemplateProcessor's built-in variable parser
         try {
@@ -72,9 +78,12 @@ class WordTemplateEngine
             foreach ($tpVars as $v) {
                 $allVariables[trim($v)] = true;
             }
-        } catch (\Exception $e) {
+            unset($processor);
+        } catch (\Throwable $e) {
             // Ignore fallback to regex
         }
+
+        gc_collect_cycles();
 
         return array_values(array_keys($allVariables));
     }
@@ -85,6 +94,9 @@ class WordTemplateEngine
      */
     public static function renderDocx(string $templateDocxPath, array $variableValues, string $outputDocxPath): string
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
+
         if (!file_exists($templateDocxPath)) {
             throw new \Exception("Template Word tidak ditemukan: {$templateDocxPath}");
         }
@@ -96,12 +108,32 @@ class WordTemplateEngine
         }
 
         // Pre-normalize template XML to ensure no split runs break replacement
-        $tempCleanDocx = self::normalizeDocxVariables($templateDocxPath);
+        $tempCleanDocx = null;
+        try {
+            $tempCleanDocx = self::normalizeDocxVariables($templateDocxPath);
+        } catch (\Throwable $e) {
+            $tempCleanDocx = null;
+        }
 
-        $processor = new TemplateProcessor($tempCleanDocx ?: $templateDocxPath);
+        $sourceFile = ($tempCleanDocx && file_exists($tempCleanDocx)) ? $tempCleanDocx : $templateDocxPath;
+        $processor = new TemplateProcessor($sourceFile);
         $processor->setMacroChars('{{', '}}');
 
+        // Detect all variables actually existing in the template to avoid unnecessary preg_replace runs
+        $existingVars = [];
+        try {
+            $rawVars = $processor->getVariables();
+            foreach ($rawVars as $rv) {
+                $existingVars[trim($rv)] = true;
+            }
+        } catch (\Throwable $e) {
+            $existingVars = [];
+        }
+
         foreach ($variableValues as $key => $val) {
+            if ($key === '__qr_image_path') {
+                continue;
+            }
             $cleanKey = trim($key, '{} ');
             $valueStr = is_scalar($val) ? (string)$val : json_encode($val);
 
@@ -114,12 +146,29 @@ class WordTemplateEngine
                 strtolower(str_replace(' ', '_', $cleanKey)),
             ];
 
+            $applied = false;
             foreach (array_unique($variations) as $varKey) {
+                // If template variables detected, only set values that actually exist in the template
+                if (!empty($existingVars) && !isset($existingVars[$varKey])) {
+                    continue;
+                }
+
                 if (str_contains($valueStr, "\n")) {
                     $lines = explode("\n", str_replace("\r", "", $valueStr));
                     $processor->setValue($varKey, implode('</w:t><w:br/><w:t>', array_map('htmlspecialchars', $lines)));
                 } else {
                     $processor->setValue($varKey, htmlspecialchars($valueStr));
+                }
+                $applied = true;
+            }
+
+            // If none of variations matched and detected vars list was empty, set standard key
+            if (!$applied && empty($existingVars)) {
+                if (str_contains($valueStr, "\n")) {
+                    $lines = explode("\n", str_replace("\r", "", $valueStr));
+                    $processor->setValue($cleanKey, implode('</w:t><w:br/><w:t>', array_map('htmlspecialchars', $lines)));
+                } else {
+                    $processor->setValue($cleanKey, htmlspecialchars($valueStr));
                 }
             }
         }
@@ -129,6 +178,9 @@ class WordTemplateEngine
         if ($qrPath && file_exists($qrPath)) {
             $qrTags = ['qr_code', 'qr_verifikasi', 'qr', 'qrcode', 'QR Code', 'QR Verifikasi'];
             foreach ($qrTags as $qrTag) {
+                if (!empty($existingVars) && !isset($existingVars[$qrTag])) {
+                    continue;
+                }
                 try {
                     $processor->setImageValue($qrTag, [
                         'path'   => $qrPath,
@@ -136,17 +188,20 @@ class WordTemplateEngine
                         'height' => 52,
                         'ratio'  => false,
                     ]);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // Tag might not exist in template, continue
                 }
             }
         }
 
         $processor->saveAs($outputDocxPath);
+        unset($processor);
 
         if ($tempCleanDocx && file_exists($tempCleanDocx)) {
             @unlink($tempCleanDocx);
         }
+
+        gc_collect_cycles();
 
         return $outputDocxPath;
     }
@@ -156,36 +211,58 @@ class WordTemplateEngine
      */
     private static function normalizeDocxVariables(string $sourcePath): ?string
     {
-        $tempPath = BASE_PATH . '/storage/temp/norm_' . bin2hex(random_bytes(8)) . '.docx';
-        if (!copy($sourcePath, $tempPath)) {
-            return null;
-        }
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
 
-        $zip = new ZipArchive();
-        if ($zip->open($tempPath) !== true) {
-            @unlink($tempPath);
-            return null;
-        }
+        try {
+            $tempDir = BASE_PATH . '/storage/temp';
+            if (!is_dir($tempDir)) {
+                @mkdir($tempDir, 0777, true);
+            }
 
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $filename = $zip->getNameIndex($i);
-            if (preg_match('#^word/(document|header\d+|footer\d+)\.xml$#', $filename)) {
-                $xml = $zip->getFromIndex($i);
-                if ($xml) {
-                    // Merge split runs inside {{...}}
-                    // Replace <w:t>...</w:t></w:r><w:r>... inside {{...}}
-                    $cleanedXml = preg_replace_callback('/\{(\{[^{}]+\})\}/s', function ($m) {
-                        return strip_tags($m[0]);
-                    }, $xml);
+            $tempPath = $tempDir . '/norm_' . bin2hex(random_bytes(8)) . '.docx';
+            if (!@copy($sourcePath, $tempPath)) {
+                return null;
+            }
 
-                    $zip->deleteIndex($i);
-                    $zip->addFromString($filename, $cleanedXml);
+            $zip = new ZipArchive();
+            if ($zip->open($tempPath) !== true) {
+                @unlink($tempPath);
+                return null;
+            }
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                if ($filename && preg_match('#^word/(document|header\d+|footer\d+)\.xml$#', $filename)) {
+                    $xml = $zip->getFromIndex($i);
+                    if ($xml && strpos($xml, '{') !== false) {
+                        // Merge split runs inside {{...}}
+                        $cleanedXml = preg_replace_callback('/\{(\{[^{}]+\})\}/s', function ($m) {
+                            return strip_tags($m[0]);
+                        }, $xml);
+
+                        if ($cleanedXml !== null && $cleanedXml !== $xml) {
+                            $zip->deleteIndex($i);
+                            $zip->addFromString($filename, $cleanedXml);
+                        }
+                        unset($cleanedXml);
+                    }
+                    unset($xml);
                 }
             }
-        }
 
-        $zip->close();
-        return $tempPath;
+            $zip->close();
+            unset($zip);
+            gc_collect_cycles();
+
+            return $tempPath;
+        } catch (\Throwable $e) {
+            // Graceful fallback to original file if memory or zip manipulation fails
+            if (isset($tempPath) && file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+            return null;
+        }
     }
 
     /**
@@ -194,6 +271,8 @@ class WordTemplateEngine
      */
     public static function convertToPdf(string $docxPath, string $outputPdfPath): ?string
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
         if (!file_exists($docxPath)) {
             return null;
         }

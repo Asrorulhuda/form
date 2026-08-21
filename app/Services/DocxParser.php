@@ -18,6 +18,8 @@ class DocxParser
      */
     public static function parseToHtml(string $filePath): string
     {
+        @ini_set('memory_limit', '512M');
+
         if (!file_exists($filePath)) {
             throw new \Exception("Berkas Word tidak ditemukan.");
         }

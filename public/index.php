@@ -7,6 +7,9 @@
 // Define base path
 define('BASE_PATH', dirname(__DIR__));
 
+// Increase default memory limit & execution time for document & media operations
+@ini_set('memory_limit', '256M');
+
 // PHP 8 Compatibility Polyfills for servers running older PHP versions
 if (!function_exists('str_starts_with')) {
     function str_starts_with(?string $haystack, ?string $needle): bool
