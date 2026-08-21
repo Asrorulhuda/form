@@ -1,9 +1,10 @@
 <?php use App\Core\View; ?>
 
 <!-- Header -->
-<div class="flex items-center justify-between mb-5">
+<div class="page-header-actions">
     <div>
-        <p class="text-sm text-muted">Total: <?= number_format($total) ?> formulir</p>
+        <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px 0;">Daftar Formulir</h2>
+        <p class="text-sm text-muted" style="margin: 0;">Total: <?= number_format($total) ?> formulir</p>
     </div>
     <a href="<?= url('forms/create') ?>" class="btn btn-primary">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -85,7 +86,7 @@
                             </td>
                             <td><?= e($f->creator_name ?? 'Admin') ?></td>
                             <td style="text-align: right;">
-                                <div class="flex justify-end gap-2">
+                                <div class="flex justify-end gap-2 items-center" style="white-space: nowrap;">
                                     <a href="<?= url("forms/{$f->id}/builder") ?>" class="btn btn-primary btn-sm" title="Edit di Visual Builder">
                                         🛠️ Builder
                                     </a>
