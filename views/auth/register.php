@@ -88,6 +88,25 @@ $selectedPlan = $selectedPlan ?? 'Gratis';
                 <?php endif; ?>
             </div>
 
+            <div class="form-group">
+                <label class="form-label" for="phone">Nomor WhatsApp Aktif <span class="required">*</span></label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-muted); font-weight: 600;">📱</span>
+                    <input type="tel" 
+                           id="phone" 
+                           name="phone" 
+                           class="form-control <?= isset($errors['phone']) ? 'is-invalid' : '' ?>" 
+                           placeholder="Contoh: 081234567890" 
+                           value="<?= e(Session::old('phone')) ?>"
+                           style="padding-left: 38px;"
+                           required>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px; display: block;">Digunakan untuk konfirmasi aktivasi akun dan notifikasi sistem.</small>
+                <?php if (isset($errors['phone'])): ?>
+                    <div class="form-error"><?= e($errors['phone'][0]) ?></div>
+                <?php endif; ?>
+            </div>
+
             <div class="grid-2">
                 <div class="form-group">
                     <label class="form-label" for="password">Password <span class="required">*</span></label>

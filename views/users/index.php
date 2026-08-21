@@ -97,7 +97,16 @@ $pendingApplicantsCount = (new User())->countPending();
                                     <strong style="color: var(--text-primary);"><?= e($u->name) ?></strong>
                                 </div>
                             </td>
-                            <td><?= e($u->email) ?></td>
+                            <td>
+                                <div><?= e($u->email) ?></div>
+                                <?php if (!empty($u->phone)): ?>
+                                    <div style="margin-top: 2px;">
+                                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $u->phone) ?>" target="_blank" style="color: #16a34a; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;" title="Chat WhatsApp">
+                                            <span>💬</span> <?= e($u->phone) ?>
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td><span class="badge badge-primary"><?= e($u->role_name) ?></span></td>
                             <td>
                                 <?php 

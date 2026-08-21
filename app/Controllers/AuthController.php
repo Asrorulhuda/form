@@ -100,6 +100,7 @@ class AuthController
         $data = [
             'name'                  => trim($_POST['name'] ?? ''),
             'email'                 => trim($_POST['email'] ?? ''),
+            'phone'                 => trim($_POST['phone'] ?? ''),
             'plan'                  => trim($_POST['plan'] ?? 'Gratis'),
             'password'              => $_POST['password'] ?? '',
             'password_confirmation' => $_POST['password_confirmation'] ?? '',
@@ -108,6 +109,7 @@ class AuthController
         $validator = new Validator([
             'name'     => 'required|min:2|max:100',
             'email'    => 'required|email|unique:users,email',
+            'phone'    => 'required|min:9|max:20',
             'password' => 'required|min:6|confirmed',
         ]);
 
@@ -127,13 +129,55 @@ class AuthController
         $userId = $userModel->create([
             'name'     => $data['name'],
             'email'    => $data['email'],
+            'phone'    => $data['phone'],
             'password' => $data['password'],
             'role_id'  => $roleId,
             'plan'     => $data['plan'],
             'status'   => 'pending', // Pending approval by Administrator
         ]);
 
-        AuditLog::log('register', 'auth', (int)$userId, "Pendaftaran user baru [Paket: {$data['plan']}]: {$data['name']}");
+        AuditLog::log('register', 'auth', (int)$userId, "Pendaftaran user baru [Paket: {$data['plan']}]: {$data['name']} ({$data['phone']})");
+
+        $settingModel = new \App\Models\Setting();
+        $siteName = $settingModel->get('site_name', 'ASR FORM');
+
+        // ─── 1. WhatsApp Alert to Admin ───
+        $wa = \App\Services\WhatsAppService::getInstance();
+        if ($wa->isEnabled() && (int)$settingModel->get('wa_notify_admin_on_register', '1') === 1) {
+            $waMsg = "👤 *PENDAFTARAN PENGGUNA BARU — {$siteName}*\n\n"
+                   . "📋 *Nama:* {$data['name']}\n"
+                   . "📧 *Email:* {$data['email']}\n"
+                   . "📱 *Nomor WhatsApp:* {$data['phone']}\n"
+                   . "📦 *Paket Dipilih:* {$data['plan']}\n"
+                   . "📅 *Waktu Daftar:* " . date('d/m/Y H:i') . " WIB\n\n"
+                   . "👉 Silakan tinjau dan aktifkan akun pemohon di Dashboard Admin.";
+            $wa->notifyAdmin($waMsg);
+        }
+
+        // ─── 2. WhatsApp Welcome to User ───
+        if ($wa->isEnabled() && !empty($data['phone'])) {
+            $userWelcome = "Halo *{$data['name']}*, terima kasih telah mendaftar di *{$siteName}*!\n\n"
+                         . "Pendaftaran Anda untuk *Paket {$data['plan']}* telah kami terima dan sedang dalam proses verifikasi tim admin kami.\n\n"
+                         . "🌐 Kunjungi website: " . url();
+            $wa->notifyUser($data['phone'], $userWelcome);
+        }
+
+        // ─── 3. Email Alert to Admin ───
+        $mail = \App\Services\MailService::getInstance();
+        if ($mail->isEnabled() && (int)$settingModel->get('smtp_notify_admin_on_register', '1') === 1) {
+            $emailSubj = "[Pendaftar Baru] {$data['name']} - Paket {$data['plan']}";
+            $emailBody = "<h2>Pendaftaran Pengguna Baru Masuk</h2>"
+                       . "<p>Ada pendaftaran akun baru pada platform {$siteName}:</p>"
+                       . "<ul>"
+                       . "<li><strong>Nama:</strong> {$data['name']}</li>"
+                       . "<li><strong>Email:</strong> {$data['email']}</li>"
+                       . "<li><strong>No WhatsApp:</strong> {$data['phone']}</li>"
+                       . "<li><strong>Paket:</strong> {$data['plan']}</li>"
+                       . "<li><strong>Waktu:</strong> " . date('d/m/Y H:i') . " WIB</li>"
+                       . "</ul>"
+                       . "<p><a href='" . url('users/applicants') . "'>Klik di sini untuk melihat daftar pemohon akun</a></p>";
+            $mail->notifyAdmin($emailSubj, $emailBody);
+        }
 
         // If paid plan, redirect to payment checkout
         if (strcasecmp($data['plan'], 'Gratis') !== 0) {

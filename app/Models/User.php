@@ -14,6 +14,22 @@ class User
     public function __construct()
     {
         $this->db = Database::getInstance();
+        $this->ensurePhoneColumn();
+    }
+
+    /**
+     * Ensure phone column exists in users table
+     */
+    private function ensurePhoneColumn(): void
+    {
+        try {
+            $cols = $this->db->fetchAll("SHOW COLUMNS FROM `users` LIKE 'phone'");
+            if (empty($cols)) {
+                $this->db->query("ALTER TABLE `users` ADD COLUMN `phone` VARCHAR(30) NULL AFTER `email`");
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback
+        }
     }
 
     /**

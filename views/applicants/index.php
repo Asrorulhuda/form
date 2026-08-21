@@ -55,7 +55,16 @@ use App\Core\View;
                                     </div>
                                 </div>
                             </td>
-                            <td><?= e($applicant->email) ?></td>
+                            <td>
+                                <div><?= e($applicant->email) ?></div>
+                                <?php if (!empty($applicant->phone)): ?>
+                                    <div style="margin-top: 4px;">
+                                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $applicant->phone) ?>" target="_blank" style="color: #16a34a; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Chat WhatsApp Pemohon">
+                                            <span>💬</span> <?= e($applicant->phone) ?>
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php 
                                     $pName = $applicant->plan ?? 'Gratis';
