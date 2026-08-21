@@ -57,7 +57,7 @@ $publicUrl = url($form->slug);
 </div>
 
 <!-- ─── TAB 1: FORM FIELDS BUILDER ─── -->
-<div id="builder-tab-fields" style="display: grid; grid-template-columns: 280px 1fr 340px; gap: 20px; align-items: start;">
+<div id="builder-tab-fields" class="builder-grid">
     
     <!-- ─── LEFT: Palette Field Types ─── -->
     <div class="card" style="position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow-y: auto;">

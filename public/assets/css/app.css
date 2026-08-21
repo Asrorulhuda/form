@@ -2353,50 +2353,280 @@ select.form-control {
     transform: translateX(20px);
 }
 
-/* Public Mobile Responsive */
-@media (max-width: 900px) {
-    .public-footer-grid {
-        grid-template-columns: 1fr 1fr;
+/* ═══════════════════════════════════════════
+   COMPREHENSIVE PROFESSIONAL RESPONSIVE SUITE
+   Supports Mobile (XS < 480px, SM 480-768px),
+   Tablet (MD 769-1024px), Laptop (LG 1025-1280px),
+   and Desktop (XL > 1280px)
+   ═══════════════════════════════════════════ */
+
+/* ─── Form Builder Responsive Grid ─── */
+.builder-grid {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 340px;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 1200px) {
+    .builder-grid {
+        grid-template-columns: 250px minmax(0, 1fr);
     }
-    .contact-grid {
-        grid-template-columns: 1fr;
+    .builder-settings-panel {
+        grid-column: span 2;
+        position: static !important;
+        max-height: none !important;
     }
 }
 
 @media (max-width: 768px) {
-    .public-nav-toggle {
-        display: block;
-    }
-    .public-nav-links {
-        display: none;
-        position: absolute;
-        top: 70px;
-        left: 0;
-        right: 0;
-        background: #ffffff;
-        border-bottom: 1px solid var(--border-subtle);
-        padding: 20px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-        box-shadow: var(--shadow-lg);
-    }
-    .public-nav-links.open {
-        display: flex;
-    }
-    .public-nav-auth {
-        margin-left: 0;
-        margin-top: 8px;
-        flex-direction: column;
-    }
-    .public-footer-grid {
+    .builder-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
-    .pricing-card.pricing-highlighted {
-        transform: none;
-    }
-    .page-hero-title {
-        font-size: 28px;
+    .builder-settings-panel {
+        grid-column: span 1;
     }
 }
+
+/* ─── Global Touch & Mobile Input Optimizations ─── */
+@media (max-width: 768px) {
+    /* Prevent iOS auto-zoom on input focus by ensuring minimum 16px font */
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Touch-friendly touch targets */
+    .btn, 
+    .nav-link,
+    .dropdown-item,
+    .palette-item,
+    .page-tab {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Topbar mobile adjustments */
+    .topbar {
+        padding: 0 16px;
+        height: 60px;
+    }
+    .topbar-left .page-title {
+        font-size: 16px;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .user-info {
+        display: none;
+    }
+
+    /* Main content padding on mobile */
+    .main-content {
+        padding: 16px 12px 32px !important;
+    }
+
+    /* Stat Cards Grid */
+    .stat-grid,
+    .stats-grid,
+    .dashboard-stats {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+
+    .stat-card {
+        padding: 14px !important;
+    }
+    .stat-value {
+        font-size: 22px !important;
+    }
+    .stat-label {
+        font-size: 12px !important;
+    }
+
+    /* Action bar / Filter Bar wrapping */
+    .page-header,
+    .filter-bar,
+    .table-actions,
+    .card-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .filter-bar input,
+    .filter-bar select,
+    .filter-bar .btn,
+    .page-header .btn {
+        width: 100% !important;
+    }
+
+    /* Public Form Submit Bar */
+    .form-submit-bar {
+        flex-direction: column-reverse !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+    .form-submit-bar .btn {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    /* Public Form Container */
+    .public-container {
+        padding: 0 4px;
+    }
+    .form-header-card {
+        padding: 20px 16px !important;
+    }
+    .field-box {
+        padding: 16px 14px !important;
+    }
+
+    /* Signature Pad Mobile Canvas */
+    .signature-pad-wrapper canvas {
+        width: 100% !important;
+        height: 180px !important;
+    }
+
+    /* Responsive Tables */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+    }
+    .table {
+        min-width: 600px;
+    }
+
+    /* Modals on Mobile */
+    .modal {
+        width: 92% !important;
+        max-width: 480px !important;
+        margin: 20px auto;
+        padding: 20px 16px !important;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        left: 16px !important;
+        right: 16px !important;
+        bottom: 16px !important;
+        max-width: none !important;
+    }
+
+    /* Landing Page Mobile */
+    .hero-section {
+        padding: 40px 16px !important;
+        text-align: center;
+    }
+    .hero-title {
+        font-size: 28px !important;
+        line-height: 1.25 !important;
+    }
+    .hero-subtitle {
+        font-size: 15px !important;
+    }
+    .hero-cta-group {
+        flex-direction: column !important;
+        width: 100%;
+    }
+    .hero-cta-group .btn {
+        width: 100% !important;
+    }
+    .features-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+}
+
+/* ─── Extra Small Mobile (iPhone SE, etc < 480px) ─── */
+@media (max-width: 480px) {
+    .stat-grid,
+    .stats-grid,
+    .dashboard-stats {
+        grid-template-columns: 1fr !important;
+    }
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    .btn-group .btn {
+        width: 100%;
+    }
+    .scale-options {
+        gap: 4px;
+    }
+    .scale-item {
+        font-size: 11px;
+    }
+    .rating-stars {
+        font-size: 24px;
+        gap: 6px;
+    }
+}
+
+/* ─── Tablet Optimizations (769px - 1024px) ─── */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        padding: 20px 16px;
+    }
+    .stat-grid,
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .pricing-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ─── High DPI / Retina Display & Dark Support Hooks ─── */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body {
+        -webkit-font-smoothing: subpixel-antialiased;
+    }
+}
+
+/* ─── Print Stylesheet ─── */
+@media print {
+    .sidebar,
+    .topbar,
+    .public-footer,
+    .btn,
+    .ad-container,
+    .no-print {
+        display: none !important;
+    }
+    body, .main-wrapper, .main-content {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
 

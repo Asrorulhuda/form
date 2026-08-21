@@ -297,10 +297,8 @@ $formErrors = Session::getFlash('form_errors') ?? [];
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
-            <?php endforeach; ?>
-
-            <div class="flex items-center justify-between mt-4">
-                <button type="submit" class="btn btn-primary btn-lg" style="min-width: 160px;">
+            <div class="form-submit-bar flex items-center justify-between mt-4 flex-wrap gap-3">
+                <button type="submit" class="btn btn-primary btn-lg btn-submit-public" style="min-width: 160px;">
                     Kirim Formulir
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
@@ -366,8 +364,10 @@ $formErrors = Session::getFlash('form_errors') ?? [];
         canvas.addEventListener('mousemove', draw);
         window.addEventListener('mouseup', stop);
 
-        canvas.addEventListener('touchstart', start);
-        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        window.addEventListener('touchend', stop);
+        window.addEventListener('touchcancel', stop);
         window.addEventListener('touchend', stop);
     });
 
