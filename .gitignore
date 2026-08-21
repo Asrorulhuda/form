@@ -9,8 +9,9 @@
 .env.safe_deploy_backup
 
 # ═══════════════════════════════════════════
-# Database Dumps, Data, & Backups (JANGAN KE GITHUB)
+# Database & SQL Files (JANGAN KE GITHUB - PRIVATE)
 # ═══════════════════════════════════════════
+/database/
 *.sql
 *.dump
 *.sqlite
@@ -19,11 +20,6 @@
 *.bak
 *.sql.gz
 *.sql.zip
-database/dumps/
-database/backups/
-# Hanya izinkan skrip migrasi & seeder master:
-!database/migration.sql
-!database/seed.sql
 
 # ═══════════════════════════════════════════
 # Composer & Dependencies
