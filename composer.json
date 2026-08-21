@@ -1,0 +1,14 @@
+{
+    "name": "asr/form",
+    "description": "ASR FORM - Platform Form Builder & Document Generator",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "PhpOffice\\PhpWord\\": "vendor/phpoffice/phpword/src/PhpWord/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

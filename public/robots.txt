@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /about
+Allow: /contact
+Allow: /pricing
+Allow: /privacy-policy
+Allow: /terms
+Allow: /form/
+Allow: /document/
+Allow: /verify/
+
+Disallow: /dashboard
+Disallow: /forms
+Disallow: /templates
+Disallow: /documents
+Disallow: /responses
+Disallow: /users
+Disallow: /applicants
+Disallow: /settings
+Disallow: /audit-log
+
+Sitemap: /sitemap.xml

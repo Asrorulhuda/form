@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════
+# Environment & Server Config (JANGAN KE GITHUB)
+# ═══════════════════════════════════════════
+.env
+.env.*
+!.env.example
+.env.backup
+.env.save
+.env.safe_deploy_backup
+
+# ═══════════════════════════════════════════
+# Database Dumps, Data, & Backups (JANGAN KE GITHUB)
+# ═══════════════════════════════════════════
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.sql.gz
+*.sql.zip
+database/dumps/
+database/backups/
+# Hanya izinkan skrip migrasi & seeder bawaan jika diperlukan:
+!database/migrations/*.sql
+!database/seeders/*.sql
+
+# ═══════════════════════════════════════════
+# Composer & Dependencies
+# ═══════════════════════════════════════════
+/vendor/
+
+# ═══════════════════════════════════════════
+# Storage & Generated User Files
+# ═══════════════════════════════════════════
+/storage/generated/docx/*
+!/storage/generated/docx/.htaccess
+/storage/generated/pdf/*
+!/storage/generated/pdf/.htaccess
+/storage/temp/*
+!/storage/temp/.htaccess
+/storage/templates/documents/*
+!/storage/templates/documents/.htaccess
+
+# ═══════════════════════════════════════════
+# User Uploads
+# ═══════════════════════════════════════════
+/public/uploads/*
+!/public/uploads/.gitkeep
+/uploads/qris/*
+
+# ═══════════════════════════════════════════
+# IDE & System Files
+# ═══════════════════════════════════════════
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
