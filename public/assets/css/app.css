@@ -2699,4 +2699,92 @@ select.form-control {
     }
 }
 
+/* ═══════════════════════════════════════════
+   ADVERTISEMENT & AD SLOTS (CLEAN & RESPONSIVE)
+   ═══════════════════════════════════════════ */
+
+.ad-container {
+    width: 100%;
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+}
+
+.ad-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+}
+
+.ad-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px;
+    width: 100%;
+}
+
+.ad-placeholder {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+}
+
+.ad-placeholder:hover {
+    border-color: var(--primary-400);
+    background: #f1f5f9;
+}
+
+.ad-placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 56px;
+}
+
+.ad-placeholder-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-700);
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    padding: 4px 12px;
+    border-radius: 99px;
+}
+
+.ad-placeholder-text {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .ad-container {
+        margin: 14px 0;
+    }
+    .ad-placeholder {
+        padding: 12px 14px;
+    }
+    .ad-placeholder-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+    .ad-placeholder-text {
+        font-size: 10.5px;
+    }
+}
+
+
 

@@ -171,41 +171,56 @@ class AdSenseService
 
     /**
      * Render an ad for a specific slot
-     * Returns empty string if ads should not be shown — no errors ever.
+     * If real ads are configured, renders the ad code.
+     * Otherwise renders a clean placeholder slot so the layout is preserved.
      */
     public function renderAd(string $slotKey): string
     {
         try {
-            if (!$this->shouldShowAd($slotKey)) {
-                return '';
-            }
-
             $slot = $this->adSlot->getByKey($slotKey);
-            if (!$slot) {
-                return '';
+            $slotName = $slot ? ($slot->name ?? $slotKey) : $slotKey;
+
+            // If real ads are configured and active
+            if ($this->shouldShowAd($slotKey)) {
+                if ($slot && !empty($slot->ad_code)) {
+                    return $this->wrapAdContainer($slot->ad_code, $slotKey);
+                }
+
+                $publisherId = htmlspecialchars($this->getPublisherId(), ENT_QUOTES, 'UTF-8');
+                $adHtml = '<ins class="adsbygoogle"'
+                    . ' style="display:block"'
+                    . ' data-ad-client="' . $publisherId . '"'
+                    . ' data-ad-slot="auto"'
+                    . ' data-ad-format="auto"'
+                    . ' data-full-width-responsive="true"></ins>'
+                    . '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>';
+
+                return $this->wrapAdContainer($adHtml, $slotKey);
             }
 
-            // If slot has custom ad code, use it
-            if (!empty($slot->ad_code)) {
-                return $this->wrapAdContainer($slot->ad_code, $slotKey);
-            }
-
-            // Default: render a responsive AdSense display ad
-            $publisherId = htmlspecialchars($this->getPublisherId(), ENT_QUOTES, 'UTF-8');
-            
-            $adHtml = '<ins class="adsbygoogle"'
-                . ' style="display:block"'
-                . ' data-ad-client="' . $publisherId . '"'
-                . ' data-ad-slot="auto"'
-                . ' data-ad-format="auto"'
-                . ' data-full-width-responsive="true"></ins>'
-                . '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>';
-
-            return $this->wrapAdContainer($adHtml, $slotKey);
+            // Always render clean, elegant placeholder slot so user can preview ad placement
+            return $this->renderPlaceholder($slotKey, $slotName);
         } catch (\Throwable $e) {
             // Graceful fallback — never break the page
             return '';
         }
+    }
+
+    /**
+     * Render a clean ad placeholder banner
+     */
+    private function renderPlaceholder(string $slotKey, string $slotName): string
+    {
+        $slotKeyAttr = htmlspecialchars(strtolower($slotKey), ENT_QUOTES, 'UTF-8');
+        $slotTitle = htmlspecialchars($slotName, ENT_QUOTES, 'UTF-8');
+
+        return '<div class="ad-container ad-placeholder" data-ad-slot="' . $slotKeyAttr . '">'
+            . '<div class="ad-label">Advertisement Space</div>'
+            . '<div class="ad-placeholder-content">'
+            . '<div class="ad-placeholder-badge">📢 Slot Iklan (' . $slotTitle . ')</div>'
+            . '<div class="ad-placeholder-text">Ruang Banner Sponsor / Google AdSense Responsif</div>'
+            . '</div>'
+            . '</div>';
     }
 
     /**
