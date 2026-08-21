@@ -3,6 +3,40 @@
 use App\Core\Env;
 use App\Core\View;
 
+// PHP 8 Compatibility Polyfills
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '') return true;
+        return strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '' || $needle === $haystack) return true;
+        if ($haystack === '') return false;
+        $len = strlen($needle);
+        return $len <= strlen($haystack) && substr_compare($haystack, $needle, -$len) === 0;
+    }
+}
+
+if (!function_exists('str_contains')) {
+    function str_contains(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '') return true;
+        return strpos($haystack, $needle) !== false;
+    }
+}
+
+/**
+ * Global Helper Functions
+ */
+
 if (!function_exists('env')) {
     function env(string $key, mixed $default = null): mixed
     {

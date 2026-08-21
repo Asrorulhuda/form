@@ -7,6 +7,36 @@
 // Define base path
 define('BASE_PATH', dirname(__DIR__));
 
+// PHP 8 Compatibility Polyfills for servers running older PHP versions
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '') return true;
+        return strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '' || $needle === $haystack) return true;
+        if ($haystack === '') return false;
+        $len = strlen($needle);
+        return $len <= strlen($haystack) && substr_compare($haystack, $needle, -$len) === 0;
+    }
+}
+
+if (!function_exists('str_contains')) {
+    function str_contains(?string $haystack, ?string $needle): bool
+    {
+        if ($haystack === null || $needle === null) return false;
+        if ($needle === '') return true;
+        return strpos($haystack, $needle) !== false;
+    }
+}
+
 // 1. Built-in Native PSR-4 Autoloader for App\* namespace
 spl_autoload_register(function ($class) {
     $prefix = 'App\\';
