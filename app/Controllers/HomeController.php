@@ -32,7 +32,9 @@ class HomeController
             'totalResponses'  => $totalResponses,
             'totalDocuments'  => $totalDocuments,
             'siteName'        => $siteName,
+            'siteTagline'     => $settingModel->get('site_tagline', 'Platform Form Builder & Document Generator'),
             'siteDesc'        => $siteDesc,
+            'contactEmail'    => $settingModel->get('site_contact_email', ''),
             'featuresEnabled' => (int) $settingModel->get('page_features_enabled', '1') === 1,
             'aboutEnabled'    => (int) $settingModel->get('page_about_enabled', '1') === 1,
             'contactEnabled'  => (int) $settingModel->get('page_contact_enabled', '1') === 1,
@@ -40,6 +42,6 @@ class HomeController
             'privacyEnabled'  => (int) $settingModel->get('page_privacy_enabled', '1') === 1,
             'termsEnabled'    => (int) $settingModel->get('page_terms_enabled', '1') === 1,
             'footerText'      => $settingModel->get('site_footer_text', '© 2026 ASR FORM. All rights reserved.'),
-        ]);
+        ], 'public');
     }
 }

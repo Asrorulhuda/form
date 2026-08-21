@@ -1934,10 +1934,40 @@ select.form-control {
     color: var(--text-secondary);
     text-decoration: none;
     transition: color var(--transition-fast);
+    position: relative;
+    padding: 6px 0;
 }
 
 .public-nav-links .nav-link-item:hover {
     color: var(--primary-600);
+}
+
+.public-nav-links .nav-link-item.active {
+    color: var(--primary-600);
+    font-weight: 700;
+}
+
+.public-nav-links .nav-link-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    background: var(--primary-600);
+    border-radius: 2px;
+}
+
+.brand-badge {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary-600);
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    padding: 1px 6px;
+    border-radius: 99px;
+    margin-left: 6px;
+    vertical-align: middle;
 }
 
 .public-nav-auth {
