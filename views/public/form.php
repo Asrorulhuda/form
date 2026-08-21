@@ -297,6 +297,8 @@ $formErrors = Session::getFlash('form_errors') ?? [];
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
+            <?php endforeach; ?>
+
             <div class="form-submit-bar flex items-center justify-between mt-4 flex-wrap gap-3">
                 <button type="submit" class="btn btn-primary btn-lg btn-submit-public" style="min-width: 160px;">
                     Kirim Formulir
