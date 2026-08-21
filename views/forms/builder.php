@@ -1191,20 +1191,62 @@ async function saveBuilder() {
 }
 
 function openShareModal() {
-    document.getElementById('share-modal-backdrop').style.display = 'block';
-    document.getElementById('share-modal').style.display = 'block';
+    const modal = document.getElementById('share-modal');
+    const backdrop = document.getElementById('share-modal-backdrop');
+    if (modal && backdrop) {
+        modal.classList.add('active');
+        backdrop.classList.add('active');
+        modal.style.display = 'block';
+        backdrop.style.display = 'block';
+    }
 }
 
 function closeShareModal() {
-    document.getElementById('share-modal-backdrop').style.display = 'none';
-    document.getElementById('share-modal').style.display = 'none';
+    const modal = document.getElementById('share-modal');
+    const backdrop = document.getElementById('share-modal-backdrop');
+    if (modal && backdrop) {
+        modal.classList.remove('active');
+        backdrop.classList.remove('active');
+        modal.style.display = 'none';
+        backdrop.style.display = 'none';
+    }
 }
 
-function copyShareUrl() {
+async function copyShareUrl() {
     const input = document.getElementById('share-url-input');
-    input.select();
-    navigator.clipboard.writeText(input.value);
-    showToast('success', 'Link formulir berhasil disalin ke clipboard!');
+    if (!input) return;
+    
+    const text = input.value;
+    let copied = false;
+
+    // 1. Try modern navigator.clipboard
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+        } catch (err) {
+            copied = false;
+        }
+    }
+
+    // 2. Fallback to execCommand (works everywhere on mobile & desktop)
+    if (!copied) {
+        try {
+            input.focus();
+            input.select();
+            input.setSelectionRange(0, 99999);
+            copied = document.execCommand('copy');
+        } catch (e) {
+            copied = false;
+        }
+    }
+
+    if (copied) {
+        showToast('success', 'Link formulir berhasil disalin ke clipboard!');
+    } else {
+        // Fallback prompt
+        window.prompt('Silakan salin link formulir secara manual:', text);
+    }
 }
 
 function escapeHtml(text) {

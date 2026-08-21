@@ -968,6 +968,25 @@ select.form-control {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
+/* ─── Input Group ─── */
+.input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 1;
+}
+
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    white-space: nowrap;
+}
+
 /* ─── Search Input ─── */
 .search-input-wrapper {
     position: relative;
