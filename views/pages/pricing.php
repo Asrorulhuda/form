@@ -57,4 +57,6 @@
     </div>
 </section>
 
-<?= renderAd('PUBLIC_PAGE') ?>
+<div class="container my-4">
+    <?= renderAd('PUBLIC_PAGE') ?>
+</div>

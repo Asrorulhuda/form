@@ -229,7 +229,9 @@
 </section>
 
 <!-- ─── Ad Placement ─── -->
-<?= renderAd('PUBLIC_PAGE') ?>
+<div class="container my-4">
+    <?= renderAd('PUBLIC_PAGE') ?>
+</div>
 
 <!-- Interactive script for tabs -->
 <script>
