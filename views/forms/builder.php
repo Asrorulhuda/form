@@ -56,60 +56,89 @@ $publicUrl = url($form->slug);
     </div>
 </div>
 
+<!-- ─── Mobile Builder Segmented Switcher (Visible on Mobile/Tablet <= 992px) ─── -->
+<div class="builder-mobile-nav" id="builder-mobile-nav">
+    <button type="button" class="builder-mobile-tab active" id="mob-tab-canvas" onclick="switchMobileBuilderPanel('canvas')">
+        <span class="tab-icon">📝</span>
+        <span class="tab-text">Pertanyaan (<span id="mob-field-count">0</span>)</span>
+    </button>
+    <button type="button" class="builder-mobile-tab" id="mob-tab-palette" onclick="switchMobileBuilderPanel('palette')">
+        <span class="tab-icon">➕</span>
+        <span class="tab-text">Tambah Field</span>
+    </button>
+    <button type="button" class="builder-mobile-tab" id="mob-tab-inspector" onclick="switchMobileBuilderPanel('inspector')">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-text">Pengaturan</span>
+    </button>
+</div>
+
 <!-- ─── TAB 1: FORM FIELDS BUILDER ─── -->
 <div id="builder-tab-fields" class="builder-grid">
     
     <!-- ─── LEFT: Palette Field Types ─── -->
-    <div class="card" style="position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow-y: auto;">
-        <div class="card-header" style="padding: 14px 16px;">
+    <div class="card builder-panel builder-palette-panel" id="builder-panel-palette">
+        <div class="card-header" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
             <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin: 0;">
                 ➕ Tambah Pertanyaan
             </h3>
+            <button type="button" class="btn btn-secondary btn-sm mobile-only-btn" onclick="switchMobileBuilderPanel('canvas')" style="display: none;">
+                &larr; Selesai
+            </button>
         </div>
-        <div class="card-body" style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; padding: 4px 6px;">Input Teks</div>
-            <button type="button" class="palette-item" onclick="addField('text')">📝 Teks Singkat</button>
-            <button type="button" class="palette-item" onclick="addField('textarea')">📄 Paragraf / Teks Panjang</button>
-            <button type="button" class="palette-item" onclick="addField('number')">🔢 Angka / Nilai</button>
-            <button type="button" class="palette-item" onclick="addField('email')">✉️ Alamat Email</button>
-            <button type="button" class="palette-item" onclick="addField('phone')">📞 No. Telepon / WA</button>
+        <div class="card-body builder-palette-body" style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+            <div class="palette-section-title">Input Teks</div>
+            <div class="palette-group-grid">
+                <button type="button" class="palette-item" onclick="addField('text')">📝 Teks Singkat</button>
+                <button type="button" class="palette-item" onclick="addField('textarea')">📄 Paragraf Panjang</button>
+                <button type="button" class="palette-item" onclick="addField('number')">🔢 Angka / Nilai</button>
+                <button type="button" class="palette-item" onclick="addField('email')">✉️ Alamat Email</button>
+                <button type="button" class="palette-item" onclick="addField('phone')">📞 No. WhatsApp</button>
+            </div>
 
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; padding: 8px 6px 4px;">Pilihan & Opsi</div>
-            <button type="button" class="palette-item" onclick="addField('dropdown')">🔻 Menu Dropdown</button>
-            <button type="button" class="palette-item" onclick="addField('radio')">🔘 Pilihan Tunggal (Radio)</button>
-            <button type="button" class="palette-item" onclick="addField('checkbox')">☑️ Kotak Centang (Multi)</button>
+            <div class="palette-section-title" style="margin-top: 6px;">Pilihan & Opsi</div>
+            <div class="palette-group-grid">
+                <button type="button" class="palette-item" onclick="addField('dropdown')">🔻 Dropdown</button>
+                <button type="button" class="palette-item" onclick="addField('radio')">🔘 Pilihan Tunggal</button>
+                <button type="button" class="palette-item" onclick="addField('checkbox')">☑️ Kotak Centang</button>
+            </div>
 
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; padding: 8px 6px 4px;">Tanggal & Waktu</div>
-            <button type="button" class="palette-item" onclick="addField('date')">📅 Pemilih Tanggal</button>
-            <button type="button" class="palette-item" onclick="addField('time')">⏰ Pemilih Jam</button>
+            <div class="palette-section-title" style="margin-top: 6px;">Tanggal & Waktu</div>
+            <div class="palette-group-grid">
+                <button type="button" class="palette-item" onclick="addField('date')">📅 Pemilih Tanggal</button>
+                <button type="button" class="palette-item" onclick="addField('time')">⏰ Pemilih Jam</button>
+            </div>
 
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; padding: 8px 6px 4px;">Media & Tanda Tangan</div>
-            <button type="button" class="palette-item" onclick="addField('signature')">✍️ Tanda Tangan Digital</button>
-            <button type="button" class="palette-item" onclick="addField('file')">📎 Unggah Berkas Dokumen</button>
-            <button type="button" class="palette-item" onclick="addField('image')">🖼️ Unggah Gambar / Foto</button>
+            <div class="palette-section-title" style="margin-top: 6px;">Media & Tanda Tangan</div>
+            <div class="palette-group-grid">
+                <button type="button" class="palette-item" onclick="addField('signature')">✍️ Tanda Tangan</button>
+                <button type="button" class="palette-item" onclick="addField('file')">📎 Unggah Dokumen</button>
+                <button type="button" class="palette-item" onclick="addField('image')">🖼️ Unggah Foto</button>
+            </div>
 
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; padding: 8px 6px 4px;">Struktur & Judul</div>
-            <button type="button" class="palette-item" onclick="addField('heading')">🏷️ Judul Bagian</button>
-            <button type="button" class="palette-item" onclick="addField('description')">ℹ️ Teks Keterangan</button>
+            <div class="palette-section-title" style="margin-top: 6px;">Struktur & Judul</div>
+            <div class="palette-group-grid">
+                <button type="button" class="palette-item" onclick="addField('heading')">🏷️ Judul Bagian</button>
+                <button type="button" class="palette-item" onclick="addField('description')">ℹ️ Keterangan</button>
+            </div>
         </div>
     </div>
 
     <!-- ─── CENTER: Form Canvas ─── -->
-    <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div class="builder-panel builder-canvas-panel" id="builder-panel-canvas" style="display: flex; flex-direction: column; gap: 16px;">
         <!-- Header Card -->
         <div class="card" style="border-top: 4px solid var(--primary-600); box-shadow: var(--shadow-md);">
-            <div class="card-body" style="padding: 24px;">
+            <div class="card-body" style="padding: 20px 24px;">
                 <div class="form-group mb-3">
-                    <input type="text" id="form-title-input" class="form-control" style="font-size: 20px; font-weight: 800; border: none; padding: 6px 0; background: transparent; box-shadow: none;" value="<?= e($form->title) ?>" placeholder="Judul Formulir">
+                    <input type="text" id="form-title-input" class="form-control" style="font-size: 18px; font-weight: 800; border: none; padding: 6px 0; background: transparent; box-shadow: none;" value="<?= e($form->title) ?>" placeholder="Judul Formulir">
                 </div>
                 <div class="form-group mb-2">
                     <textarea id="form-desc-input" class="form-control" style="font-size: 14px; color: var(--text-secondary); border: none; padding: 4px 0; background: transparent; box-shadow: none; min-height: 45px;" placeholder="Tuliskan deskripsi atau instruksi formulir di sini..."><?= e($form->description) ?></textarea>
                 </div>
-                <div class="flex items-center gap-2 pt-2" style="border-top: 1px dashed #e2e8f0;">
+                <div class="flex items-center gap-2 pt-2 flex-wrap" style="border-top: 1px dashed #e2e8f0;">
                     <span class="text-sm text-muted" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Link Singkat:</span>
-                    <div style="font-family: monospace; font-size: 12px; color: #4f46e5; background: #eef2ff; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 2px;">
+                    <div style="font-family: monospace; font-size: 12px; color: #4f46e5; background: #eef2ff; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 2px; max-width: 100%; overflow-x: auto;">
                         <span><?= url() ?>/</span>
-                        <input type="text" id="form-slug-input" value="<?= e($form->slug) ?>" style="border: none; background: transparent; font-family: monospace; font-weight: bold; color: #3730a3; outline: none; width: 170px;" title="Ubah link singkat formulir">
+                        <input type="text" id="form-slug-input" value="<?= e($form->slug) ?>" style="border: none; background: transparent; font-family: monospace; font-weight: bold; color: #3730a3; outline: none; width: 140px;" title="Ubah link singkat formulir">
                     </div>
                 </div>
             </div>
@@ -120,23 +149,34 @@ $publicUrl = url($form->slug);
             <!-- Rendered dynamically by JavaScript -->
         </div>
 
+        <!-- Add Field Quick Button on Mobile -->
+        <div class="mobile-add-btn-wrapper" style="margin-top: 8px;">
+            <button type="button" class="btn btn-primary w-full" onclick="switchMobileBuilderPanel('palette')" style="padding: 12px; font-weight: 700; border-radius: 12px;">
+                ➕ Tambah Pertanyaan Baru
+            </button>
+        </div>
+
         <!-- Empty Canvas Placeholder -->
         <div id="empty-canvas" class="card text-center" style="display: none; padding: 40px 20px; border: 2px dashed #cbd5e1; background: #f8fafc;">
             <p style="color: var(--text-secondary); font-weight: 600; margin-bottom: 8px;">Formulir masih kosong</p>
-            <p class="text-sm text-muted" style="margin: 0;">Klik salah satu tipe field di panel kiri untuk mulai menambahkan pertanyaan.</p>
+            <p class="text-sm text-muted" style="margin: 0 0 16px 0;">Pilih tipe pertanyaan untuk mulai membuat formulir Anda.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchMobileBuilderPanel('palette')">➕ Tambah Pertanyaan</button>
         </div>
     </div>
 
     <!-- ─── RIGHT: Property Inspector ─── -->
-    <div class="card" style="position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow-y: auto;">
-        <div class="card-header" style="padding: 14px 16px;">
+    <div class="card builder-panel builder-inspector-panel" id="builder-panel-inspector">
+        <div class="card-header" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
             <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin: 0;">
                 ⚙️ Pengaturan Field
             </h3>
+            <button type="button" class="btn btn-primary btn-sm mobile-only-btn" onclick="switchMobileBuilderPanel('canvas')" style="display: none;">
+                ✓ Selesai
+            </button>
         </div>
         <div class="card-body" id="inspector-body" style="padding: 16px;">
             <p class="text-sm text-muted text-center" style="margin: 30px 0;">
-                Pilih salah satu field di tengah untuk mengubah pengaturannya.
+                Pilih salah satu field di formulir untuk mengubah pengaturannya.
             </p>
         </div>
     </div>
@@ -305,6 +345,45 @@ $publicUrl = url($form->slug);
 </div>
 
 <style>
+/* ─── Builder Mobile Navigation Bar ─── */
+.builder-mobile-nav {
+    display: none;
+    position: sticky;
+    top: 70px;
+    z-index: 90;
+    background: #ffffff;
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 16px;
+    gap: 6px;
+}
+
+.builder-mobile-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.builder-mobile-tab.active {
+    background: var(--primary-600);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
 .tab-btn {
     padding: 12px 20px;
     border: none;
@@ -321,11 +400,27 @@ $publicUrl = url($form->slug);
     border-bottom-color: var(--primary-600);
     background: #ffffff;
 }
+
+.palette-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 2px;
+}
+
+.palette-group-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 .palette-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 9px 12px;
     border-radius: 8px;
     border: 1px solid var(--border-subtle);
     background: #ffffff;
@@ -342,6 +437,7 @@ $publicUrl = url($form->slug);
     border-color: var(--primary-300);
     transform: translateX(2px);
 }
+
 .field-card {
     background: #ffffff;
     border: 1px solid var(--border-subtle);
@@ -360,6 +456,7 @@ $publicUrl = url($form->slug);
     border-color: var(--primary-600);
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), var(--shadow-md);
 }
+
 .field-toolbar {
     display: flex;
     align-items: center;
@@ -372,18 +469,65 @@ $publicUrl = url($form->slug);
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    padding: 4px 8px;
+    padding: 5px 9px;
     cursor: pointer;
     font-size: 12px;
+    font-weight: 600;
     transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .field-btn:hover {
     background: #e2e8f0;
+}
+.field-btn.edit:hover {
+    background: var(--primary-50);
+    color: var(--primary-600);
+    border-color: var(--primary-300);
 }
 .field-btn.delete:hover {
     background: #fee2e2;
     color: #b91c1c;
     border-color: #fca5a5;
+}
+
+/* ─── Mobile Media Query for Builder ─── */
+@media (max-width: 992px) {
+    .builder-mobile-nav {
+        display: flex;
+    }
+    .mobile-only-btn {
+        display: inline-flex !important;
+    }
+    .palette-group-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .builder-panel {
+        display: none;
+    }
+    .builder-panel.mobile-active {
+        display: block !important;
+    }
+    #builder-panel-canvas.mobile-active {
+        display: flex !important;
+    }
+    .field-card {
+        padding: 16px 14px;
+    }
+    .field-toolbar {
+        position: static;
+        margin-bottom: 12px;
+        justify-content: flex-end;
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 8px;
+    }
+    .field-btn {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
 }
 </style>
 
@@ -408,10 +552,46 @@ let templateVariables = <?= json_encode($templateVariables) ?>;
 let selectedTemplateId = <?= json_encode($form->template_id ? (int)$form->template_id : null) ?>;
 let selectedIndex = 0;
 
+let currentMobilePanel = 'canvas';
+
+function switchMobileBuilderPanel(panelName) {
+    currentMobilePanel = panelName;
+    
+    // Update tab button states
+    ['canvas', 'palette', 'inspector'].forEach(name => {
+        const btn = document.getElementById('mob-tab-' + name);
+        if (btn) btn.classList.toggle('active', name === panelName);
+    });
+
+    if (window.innerWidth <= 992) {
+        document.querySelectorAll('.builder-panel').forEach(p => p.classList.remove('mobile-active'));
+        const target = document.getElementById('builder-panel-' + panelName);
+        if (target) {
+            target.classList.add('mobile-active');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     renderCanvas();
     if (selectedTemplateId) {
         onTemplateSelected(selectedTemplateId);
+    }
+    if (window.innerWidth <= 992) {
+        switchMobileBuilderPanel('canvas');
+    }
+});
+
+// Update on resize
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 992) {
+        document.querySelectorAll('.builder-panel').forEach(p => {
+            p.classList.remove('mobile-active');
+            p.style.display = '';
+        });
+    } else {
+        switchMobileBuilderPanel(currentMobilePanel);
     }
 });
 
@@ -545,6 +725,9 @@ function renderCanvas() {
 function renderCanvasOnly() {
     const container = document.getElementById('fields-container');
     const emptyNotice = document.getElementById('empty-canvas');
+    const mobCountEl = document.getElementById('mob-field-count');
+    if (mobCountEl) mobCountEl.textContent = fields.length;
+
     container.innerHTML = '';
 
     if (fields.length === 0) {
@@ -561,7 +744,7 @@ function renderCanvasOnly() {
     fields.forEach((f, idx) => {
         const card = document.createElement('div');
         card.className = `field-card ${idx === selectedIndex ? 'selected' : ''}`;
-        card.onclick = () => selectField(idx);
+        card.onclick = () => selectField(idx, false);
 
         let previewHtml = '';
         const reqBadge = `<span class="field-req-star" style="color: var(--danger-600); margin-left: 2px; display: ${f.is_required ? 'inline' : 'none'};">*</span>`;
@@ -633,6 +816,7 @@ function renderCanvasOnly() {
             <div class="field-toolbar">
                 <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, -1)" title="Pindah ke Atas">▲</button>
                 <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, 1)" title="Pindah ke Bawah">▼</button>
+                <button type="button" class="field-btn edit" onclick="event.stopPropagation(); selectField(${idx}, true)" title="Edit Pengaturan Field">⚙️ Edit</button>
                 <button type="button" class="field-btn" onclick="event.stopPropagation(); duplicateField(${idx})" title="Duplikasi">📋</button>
                 <button type="button" class="field-btn delete" onclick="event.stopPropagation(); removeField(${idx})" title="Hapus">🗑️</button>
             </div>
@@ -648,9 +832,12 @@ function renderCanvasOnly() {
     });
 }
 
-function selectField(idx) {
+function selectField(idx, openInspector = false) {
     selectedIndex = idx;
     renderCanvas();
+    if (openInspector && window.innerWidth <= 992) {
+        switchMobileBuilderPanel('inspector');
+    }
 }
 
 function addField(type) {
@@ -688,6 +875,10 @@ function addField(type) {
 
     selectedIndex = fields.length - 1;
     renderCanvas();
+    
+    if (window.innerWidth <= 992) {
+        switchMobileBuilderPanel('canvas');
+    }
     showToast('success', `Field '${label}' ditambahkan!`);
 }
 
