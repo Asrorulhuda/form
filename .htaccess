@@ -1,22 +1,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Prevent direct access to sensitive folders and files
-    RewriteRule ^(\.env|\.git|app|config|database|storage|views|routes|vendor|composer\.(json|lock)|prd\.md) - [F,L,NC]
-
-    # Route everything to public directory safely without recursion
+    # Redirect root to public/
     RewriteRule ^$ public/ [L]
+
+    # Redirect all non-existing files to public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
-
-# Block access to hidden/sensitive files
-<FilesMatch "^\.|\.(env|json|lock|sql|md|log)$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Deny from all
-    </IfModule>
-</FilesMatch>

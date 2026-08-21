@@ -99,14 +99,14 @@ App\Core\Session::start();
 try {
     App\Core\Database::init(require BASE_PATH . '/config/database.php');
 } catch (\Throwable $e) {
-    http_response_code(503);
+    http_response_code(500);
     error_log("[Database Connection Error] " . $e->getMessage());
     $maintView = BASE_PATH . '/views/errors/maintenance.php';
     if (file_exists($maintView)) {
-        $dbError = $isDebug ? $e->getMessage() : null;
+        $dbError = $e->getMessage();
         include $maintView;
     } else {
-        echo "<h1>503 Service Unavailable</h1><p>Koneksi database sedang mengalami kendala. Silakan coba beberapa saat lagi.</p>";
+        echo "<h1>Koneksi Database Gagal</h1><p>" . htmlspecialchars($e->getMessage()) . "</p>";
     }
     exit;
 }
