@@ -98,10 +98,10 @@ class Database
      */
     public function insert(string $table, array $data): string|false
     {
-        $columns = implode(', ', array_keys($data));
+        $columns = implode(', ', array_map(fn($col) => "`{$col}`", array_keys($data)));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
-        $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
+        $sql = "INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})";
         $this->query($sql, array_values($data));
 
         return $this->pdo->lastInsertId();
@@ -112,8 +112,8 @@ class Database
      */
     public function update(string $table, array $data, string $where, array $whereParams = []): int
     {
-        $set = implode(', ', array_map(fn($col) => "{$col} = ?", array_keys($data)));
-        $sql = "UPDATE {$table} SET {$set} WHERE {$where}";
+        $set = implode(', ', array_map(fn($col) => "`{$col}` = ?", array_keys($data)));
+        $sql = "UPDATE `{$table}` SET {$set} WHERE {$where}";
 
         $stmt = $this->query($sql, array_merge(array_values($data), $whereParams));
         return $stmt->rowCount();
@@ -124,7 +124,7 @@ class Database
      */
     public function delete(string $table, string $where, array $params = []): int
     {
-        $sql = "DELETE FROM {$table} WHERE {$where}";
+        $sql = "DELETE FROM `{$table}` WHERE {$where}";
         $stmt = $this->query($sql, $params);
         return $stmt->rowCount();
     }
@@ -134,7 +134,7 @@ class Database
      */
     public function count(string $table, string $where = '1=1', array $params = []): int
     {
-        $sql = "SELECT COUNT(*) FROM {$table} WHERE {$where}";
+        $sql = "SELECT COUNT(*) FROM `{$table}` WHERE {$where}";
         return (int) $this->fetchColumn($sql, $params);
     }
 
