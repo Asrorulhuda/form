@@ -7,19 +7,41 @@
 // Define base path
 define('BASE_PATH', dirname(__DIR__));
 
-// Autoload
-require_once BASE_PATH . '/vendor/autoload.php';
+// 1. Built-in Native PSR-4 Autoloader for App\* namespace
+spl_autoload_register(function ($class) {
+    $prefix = 'App\\';
+    $baseDir = BASE_PATH . '/app/';
+    
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+    
+    $relativeClass = substr($class, $len);
+    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+    
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
 
-// Load environment
-App\Core\Env::load(BASE_PATH . '/.env');
+// 2. Load Composer Vendor Autoload if available
+if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+    require_once BASE_PATH . '/vendor/autoload.php';
+}
 
-// Load Helpers
+// 3. Load environment (.env)
+if (file_exists(BASE_PATH . '/.env')) {
+    App\Core\Env::load(BASE_PATH . '/.env');
+}
+
+// 4. Load Helpers
 require_once BASE_PATH . '/app/Helpers/helpers.php';
 
-// Load config
-$config = require BASE_PATH . '/config/app.php';
+// 5. Load config
+$config = file_exists(BASE_PATH . '/config/app.php') ? require BASE_PATH . '/config/app.php' : [];
 
-// Configure error reporting based on environment
+// 6. Configure error reporting based on environment
 $isDebug = (bool) ($config['debug'] ?? false);
 if ($isDebug) {
     error_reporting(E_ALL);
@@ -29,7 +51,7 @@ if ($isDebug) {
     ini_set('display_errors', '0');
 }
 
-// Global Exception Handler
+// 7. Global Exception Handler
 set_exception_handler(function (\Throwable $e) use ($isDebug) {
     http_response_code(500);
     error_log("[ASR FORM Exception] " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());

@@ -4,9 +4,10 @@
     # Prevent direct access to sensitive folders and files
     RewriteRule ^(\.env|\.git|app|config|database|storage|views|routes|vendor|composer\.(json|lock)|prd\.md) - [F,L,NC]
 
-    # Route everything to public directory
+    # Route everything to public directory safely without recursion
     RewriteRule ^$ public/ [L]
-    RewriteRule ^((?!public/).*)$ public/$1 [L]
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
 # Block access to hidden/sensitive files
