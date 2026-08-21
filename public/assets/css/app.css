@@ -1863,30 +1863,48 @@ select.form-control {
    ADSENSE & AD CONTAINERS
    ═══════════════════════════════════════════ */
 
+.ad-wrapper {
+    width: 100%;
+    padding: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
 .ad-container {
     width: 100%;
     max-width: 728px;
-    margin: 28px auto;
-    padding: 12px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 16px 20px;
     background: #f8fafc;
-    border: 1px dashed #cbd5e1;
+    border: 1.5px dashed #cbd5e1;
     border-radius: var(--radius-lg);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     overflow: hidden;
     transition: all var(--transition-fast);
 }
 
 .ad-container:hover {
-    border-color: #94a3b8;
+    border-color: var(--primary-400);
+    background: #f1f5f9;
 }
 
 .ad-label {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     color: #94a3b8;
     margin-bottom: 8px;
+    text-align: center;
+    width: 100%;
 }
 
 .ad-content {
@@ -1896,22 +1914,64 @@ select.form-control {
     min-height: 90px;
     width: 100%;
     overflow: hidden;
+    text-align: center;
 }
 
 .ad-container ins.adsbygoogle {
     display: block !important;
     max-width: 100%;
+    margin: 0 auto !important;
+}
+
+/* Ad Placeholder Styles */
+.ad-placeholder {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1.5px dashed #cbd5e1;
+}
+
+.ad-placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 0;
+}
+
+.ad-placeholder-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: var(--radius-full);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: var(--primary-600);
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin: 0 auto;
+}
+
+.ad-placeholder-text {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-align: center;
 }
 
 /* Specific Slot Positioning */
 .ad-container[data-ad-slot="form_bottom"] {
-    margin-top: 24px;
-    margin-bottom: 20px;
+    margin-top: 16px;
+    margin-bottom: 16px;
 }
 
 .ad-container[data-ad-slot="form_success"] {
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 16px;
+    margin-bottom: 16px;
 }
 
 /* ═══════════════════════════════════════════

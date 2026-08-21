@@ -214,11 +214,15 @@ class AdSenseService
         $slotKeyAttr = htmlspecialchars(strtolower($slotKey), ENT_QUOTES, 'UTF-8');
         $slotTitle = htmlspecialchars($slotName, ENT_QUOTES, 'UTF-8');
 
-        return '<div class="ad-container ad-placeholder" data-ad-slot="' . $slotKeyAttr . '">'
+        return '<div class="ad-wrapper">'
+            . '<div class="container">'
+            . '<div class="ad-container ad-placeholder" data-ad-slot="' . $slotKeyAttr . '">'
             . '<div class="ad-label">Advertisement Space</div>'
             . '<div class="ad-placeholder-content">'
-            . '<div class="ad-placeholder-badge">📢 Slot Iklan (' . $slotTitle . ')</div>'
+            . '<div class="ad-placeholder-badge">📢 Slot Iklan: ' . $slotTitle . '</div>'
             . '<div class="ad-placeholder-text">Ruang Banner Sponsor / Google AdSense Responsif</div>'
+            . '</div>'
+            . '</div>'
             . '</div>'
             . '</div>';
     }
@@ -230,9 +234,13 @@ class AdSenseService
     {
         $slotKeyAttr = htmlspecialchars(strtolower($slotKey), ENT_QUOTES, 'UTF-8');
         
-        return '<div class="ad-container" data-ad-slot="' . $slotKeyAttr . '">'
+        return '<div class="ad-wrapper">'
+            . '<div class="container">'
+            . '<div class="ad-container" data-ad-slot="' . $slotKeyAttr . '">'
             . '<div class="ad-label">Advertisement</div>'
             . '<div class="ad-content">' . $adHtml . '</div>'
+            . '</div>'
+            . '</div>'
             . '</div>';
     }
 }
