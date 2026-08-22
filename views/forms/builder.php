@@ -2,7 +2,7 @@
 use App\Core\Auth;
 use App\Core\CSRF;
 
-$publicUrl = url($form->slug);
+$publicUrl = url("form/{$form->slug}");
 ?>
 
 <!-- ─── Builder Top Bar ─── -->
@@ -65,10 +65,6 @@ $publicUrl = url($form->slug);
     <button type="button" class="builder-mobile-tab" id="mob-tab-palette" onclick="switchMobileBuilderPanel('palette')">
         <span class="tab-icon">➕</span>
         <span class="tab-text">Tambah Field</span>
-    </button>
-    <button type="button" class="builder-mobile-tab" id="mob-tab-inspector" onclick="switchMobileBuilderPanel('inspector')">
-        <span class="tab-icon">⚙️</span>
-        <span class="tab-text">Pengaturan</span>
     </button>
 </div>
 
@@ -159,25 +155,8 @@ $publicUrl = url($form->slug);
         <!-- Empty Canvas Placeholder -->
         <div id="empty-canvas" class="card text-center" style="display: none; padding: 40px 20px; border: 2px dashed #cbd5e1; background: #f8fafc;">
             <p style="color: var(--text-secondary); font-weight: 600; margin-bottom: 8px;">Formulir masih kosong</p>
-            <p class="text-sm text-muted" style="margin: 0 0 16px 0;">Pilih tipe pertanyaan untuk mulai membuat formulir Anda.</p>
+            <p class="text-sm text-muted" style="margin: 0 0 16px 0;">Pilih tipe pertanyaan di panel kiri untuk mulai membuat formulir Anda.</p>
             <button type="button" class="btn btn-primary btn-sm" onclick="switchMobileBuilderPanel('palette')">➕ Tambah Pertanyaan</button>
-        </div>
-    </div>
-
-    <!-- ─── RIGHT: Property Inspector ─── -->
-    <div class="card builder-panel builder-inspector-panel" id="builder-panel-inspector">
-        <div class="card-header" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
-            <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin: 0;">
-                ⚙️ Pengaturan Field
-            </h3>
-            <button type="button" class="btn btn-primary btn-sm mobile-only-btn" onclick="switchMobileBuilderPanel('canvas')" style="display: none;">
-                ✓ Selesai
-            </button>
-        </div>
-        <div class="card-body" id="inspector-body" style="padding: 16px;">
-            <p class="text-sm text-muted text-center" style="margin: 30px 0;">
-                Pilih salah satu field di formulir untuk mengubah pengaturannya.
-            </p>
         </div>
     </div>
 
@@ -345,6 +324,19 @@ $publicUrl = url($form->slug);
 </div>
 
 <style>
+/* ─── 2-Column Builder Grid ─── */
+.builder-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.builder-palette-panel {
+    position: sticky;
+    top: 20px;
+}
+
 /* ─── Builder Mobile Navigation Bar ─── */
 .builder-mobile-nav {
     display: none;
@@ -438,38 +430,229 @@ $publicUrl = url($form->slug);
     transform: translateX(2px);
 }
 
+/* ─── Field Card & Direct Inline Editing ─── */
 .field-card {
     background: #ffffff;
-    border: 1px solid var(--border-subtle);
+    border: 1.5px solid var(--border-subtle);
+    border-left: 4px solid #cbd5e1;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: 20px;
+    padding: 18px 20px;
     transition: all 0.2s ease;
-    cursor: pointer;
     position: relative;
 }
 .field-card:hover {
-    border-color: rgba(99, 102, 241, 0.4);
+    border-color: #cbd5e1;
+    border-left-color: var(--primary-400);
     box-shadow: var(--shadow-md);
 }
 .field-card.selected {
-    border-color: var(--primary-600);
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), var(--shadow-md);
+    border-color: var(--primary-400);
+    border-left-color: var(--primary-600);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12), var(--shadow-md);
+    background: #ffffff;
 }
 
-.field-toolbar {
+.field-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.field-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.field-number-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.field-card.selected .field-number-pill {
+    background: var(--primary-100);
+    color: var(--primary-700);
+}
+
+.field-input-title-wrapper {
     display: flex;
     align-items: center;
     gap: 6px;
-    position: absolute;
-    top: 14px;
-    right: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.inline-field-title {
+    width: 100%;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: transparent;
+    transition: all 0.15s ease;
+    line-height: 1.4;
+}
+.inline-field-title:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+.inline-field-title:focus {
+    background: #ffffff;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    outline: none;
+}
+.inline-field-title.heading-style {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text-primary);
+    border-bottom: 2px solid #e2e8f0;
+    border-radius: 0;
+    padding: 6px 4px;
+}
+.inline-field-title.heading-style:focus {
+    border-bottom-color: var(--primary-600);
+    box-shadow: none;
+}
+
+.inline-field-desc {
+    width: 100%;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: transparent;
+    min-height: 50px;
+    resize: vertical;
+    line-height: 1.5;
+    transition: all 0.15s ease;
+}
+.inline-field-desc:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+.inline-field-desc:focus {
+    background: #ffffff;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    outline: none;
+}
+
+.inline-placeholder-input {
+    width: 100%;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 7px 12px;
+    background: #f8fafc;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+}
+.inline-placeholder-input:focus {
+    background: #ffffff;
+    border-style: solid;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+    outline: none;
+}
+
+/* ─── Inline Options List ─── */
+.inline-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+.inline-option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.inline-option-marker {
+    font-size: 14px;
+    color: #94a3b8;
+    user-select: none;
+    flex-shrink: 0;
+}
+.inline-option-input {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #ffffff;
+    transition: all 0.15s ease;
+}
+.inline-option-input:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+    outline: none;
+}
+.inline-option-del {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+.inline-option-del:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.inline-add-opt-btn {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-600);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+}
+.inline-add-opt-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-400);
+}
+
+/* ─── Field Toolbar & Card Footer ─── */
+.field-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
 }
 .field-btn {
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    padding: 5px 9px;
+    padding: 5px 8px;
     cursor: pointer;
     font-size: 12px;
     font-weight: 600;
@@ -477,14 +660,11 @@ $publicUrl = url($form->slug);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    color: var(--text-secondary);
 }
 .field-btn:hover {
     background: #e2e8f0;
-}
-.field-btn.edit:hover {
-    background: var(--primary-50);
-    color: var(--primary-600);
-    border-color: var(--primary-300);
+    color: var(--text-primary);
 }
 .field-btn.delete:hover {
     background: #fee2e2;
@@ -492,8 +672,119 @@ $publicUrl = url($form->slug);
     border-color: #fca5a5;
 }
 
+.field-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.inline-var-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.inline-var-box {
+    display: inline-flex;
+    align-items: center;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #4338ca;
+}
+.inline-var-input {
+    border: none;
+    background: transparent;
+    font-family: monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #4338ca;
+    outline: none;
+    min-width: 60px;
+    max-width: 130px;
+    padding: 0 2px;
+}
+.inline-var-input:focus {
+    background: #ffffff;
+    border-radius: 3px;
+}
+
+.inline-req-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+.inline-req-toggle input {
+    cursor: pointer;
+}
+
+.btn-cond-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+}
+.btn-cond-toggle:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: var(--text-primary);
+}
+.btn-cond-toggle.active {
+    background: #fef3c7;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+/* ─── Inline Conditional Logic Box ─── */
+.inline-cond-box {
+    margin-top: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #f59e0b;
+    border-radius: 8px;
+    padding: 14px;
+    animation: fadeIn 0.2s ease;
+}
+.inline-cond-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+@media (max-width: 768px) {
+    .inline-cond-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ─── Mobile Media Query for Builder ─── */
 @media (max-width: 992px) {
+    .builder-grid {
+        grid-template-columns: 1fr;
+    }
     .builder-mobile-nav {
         display: flex;
     }
@@ -515,14 +806,18 @@ $publicUrl = url($form->slug);
         display: flex !important;
     }
     .field-card {
-        padding: 16px 14px;
+        padding: 14px 12px;
+    }
+    .field-card-header {
+        flex-direction: column;
+        gap: 8px;
     }
     .field-toolbar {
-        position: static;
-        margin-bottom: 12px;
+        width: 100%;
         justify-content: flex-end;
         border-bottom: 1px dashed #e2e8f0;
         padding-bottom: 8px;
+        margin-bottom: 4px;
     }
     .field-btn {
         padding: 6px 10px;
@@ -558,7 +853,7 @@ function switchMobileBuilderPanel(panelName) {
     currentMobilePanel = panelName;
     
     // Update tab button states
-    ['canvas', 'palette', 'inspector'].forEach(name => {
+    ['canvas', 'palette'].forEach(name => {
         const btn = document.getElementById('mob-tab-' + name);
         if (btn) btn.classList.toggle('active', name === panelName);
     });
@@ -716,13 +1011,29 @@ function autoMatchVariables() {
     showToast('success', `Berhasil mencocokkan ${matchedCount} variable dengan pertanyaan formulir!`);
 }
 
-// ─── Canvas & Inspector Functions ───
-function renderCanvas() {
-    renderCanvasOnly();
-    renderInspector();
+function getFieldTypeBadge(type) {
+    const labels = {
+        text: '📝 Teks Singkat',
+        textarea: '📄 Paragraf Panjang',
+        number: '🔢 Angka',
+        email: '✉️ Email',
+        phone: '📞 WhatsApp / No. HP',
+        dropdown: '🔻 Dropdown',
+        radio: '🔘 Pilihan Tunggal',
+        checkbox: '☑️ Kotak Centang',
+        date: '📅 Tanggal',
+        time: '⏰ Jam',
+        signature: '✍️ Tanda Tangan',
+        file: '📎 Unggah Dokumen',
+        image: '🖼️ Unggah Foto',
+        heading: '🏷️ Judul Bagian',
+        description: 'ℹ️ Keterangan'
+    };
+    return labels[type] || '📝 Pertanyaan';
 }
 
-function renderCanvasOnly() {
+// ─── Direct In-Card Canvas Rendering & Controls ───
+function renderCanvas() {
     const container = document.getElementById('fields-container');
     const emptyNotice = document.getElementById('empty-canvas');
     const mobCountEl = document.getElementById('mob-field-count');
@@ -738,105 +1049,394 @@ function renderCanvasOnly() {
     }
 
     if (selectedIndex >= fields.length) {
-        selectedIndex = fields.length - 1;
+        selectedIndex = Math.max(0, fields.length - 1);
     }
 
     fields.forEach((f, idx) => {
+        if (!f.settings) f.settings = {};
+        if (!f.settings.conditional_logic) {
+            f.settings.conditional_logic = {
+                enabled: false,
+                action: 'show',
+                target_field: '',
+                operator: 'equals',
+                value: 'Ya'
+            };
+        }
+        const condLogic = f.settings.conditional_logic;
+
         const card = document.createElement('div');
         card.className = `field-card ${idx === selectedIndex ? 'selected' : ''}`;
-        card.onclick = () => selectField(idx, false);
+        card.id = `field-card-${idx}`;
+        card.onclick = () => selectField(idx);
 
-        let previewHtml = '';
-        const reqBadge = `<span class="field-req-star" style="color: var(--danger-600); margin-left: 2px; display: ${f.is_required ? 'inline' : 'none'};">*</span>`;
+        const reqBadge = `<span class="field-req-star" style="color: var(--danger-600); font-weight: 800; font-size: 16px; margin-left: 2px; display: ${f.is_required ? 'inline' : 'none'};" title="Wajib Diisi">*</span>`;
+
+        let headerHtml = '';
+        let bodyHtml = '';
 
         if (f.field_type === 'heading') {
-            previewHtml = `<h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;"><span class="field-label-text">${escapeHtml(f.label)}</span></h3>`;
+            headerHtml = `
+                <div class="field-title-row">
+                    <span class="field-number-pill" title="Judul Bagian">🏷️</span>
+                    <div class="field-input-title-wrapper">
+                        <input type="text" 
+                               class="inline-field-title heading-style" 
+                               value="${escapeHtml(f.label)}" 
+                               placeholder="Judul Bagian / Header..." 
+                               oninput="handleDirectLabelInput(${idx}, this.value)" 
+                               onclick="event.stopPropagation()" 
+                               onfocus="selectField(${idx})">
+                    </div>
+                </div>
+            `;
+            bodyHtml = ``;
         } else if (f.field_type === 'description') {
-            previewHtml = `<p class="text-sm text-muted" style="margin: 0; line-height: 1.5;"><span class="field-desc-text">${escapeHtml(f.description || f.label)}</span></p>`;
-        } else if (f.field_type === 'signature') {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <div style="border: 2px dashed #cbd5e1; border-radius: 8px; height: 75px; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 13px;">
-                    ✍️ Area Tanda Tangan Digital
+            headerHtml = `
+                <div class="field-title-row">
+                    <span class="field-number-pill" title="Keterangan Formulir">ℹ️</span>
+                    <div class="field-input-title-wrapper">
+                        <textarea class="inline-field-desc" 
+                                  placeholder="Tulis petunjuk atau keterangan formulir di sini..." 
+                                  oninput="handleDirectDescInput(${idx}, this.value)" 
+                                  onclick="event.stopPropagation()" 
+                                  onfocus="selectField(${idx})">${escapeHtml(f.description || f.label)}</textarea>
+                    </div>
                 </div>
             `;
-        } else if (f.field_type === 'textarea') {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <textarea class="form-control" placeholder="${escapeHtml(f.placeholder)}" disabled style="min-height: 60px;"></textarea>
-            `;
-        } else if (f.field_type === 'dropdown') {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <select class="form-control" disabled>
-                    <option>${escapeHtml(f.placeholder || '-- Pilih Opsi --')}</option>
-                    ${f.options.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}
-                </select>
-            `;
-        } else if (f.field_type === 'radio') {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <div class="flex flex-col gap-2">
-                    ${f.options.map(opt => `
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="radio" disabled> <span>${escapeHtml(opt)}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            `;
-        } else if (f.field_type === 'checkbox') {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <div class="flex flex-col gap-2">
-                    ${f.options.map(opt => `
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="checkbox" disabled> <span>${escapeHtml(opt)}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            `;
+            bodyHtml = ``;
         } else {
-            previewHtml = `
-                <label class="form-label" style="font-weight: 700;"><span class="field-label-text">${escapeHtml(f.label)}</span> ${reqBadge}</label>
-                <input type="text" class="form-control" placeholder="${escapeHtml(f.placeholder)}" disabled>
+            // General Input Question Card
+            headerHtml = `
+                <div class="field-title-row">
+                    <span class="field-number-pill">${idx + 1}</span>
+                    <div class="field-input-title-wrapper">
+                        <input type="text" 
+                               class="inline-field-title" 
+                               value="${escapeHtml(f.label)}" 
+                               placeholder="Tulis pertanyaan di sini..." 
+                               oninput="handleDirectLabelInput(${idx}, this.value)" 
+                               onclick="event.stopPropagation()" 
+                               onfocus="selectField(${idx})">
+                        ${reqBadge}
+                        <span class="badge badge-muted" style="font-size: 10.5px; font-weight: 700; margin-left: 4px; white-space: nowrap;">
+                            ${getFieldTypeBadge(f.field_type)}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            if (f.field_type === 'signature') {
+                bodyHtml = `
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 8px; height: 75px; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 13px; margin-top: 4px;">
+                        ✍️ Area Tanda Tangan Digital Responden
+                    </div>
+                `;
+            } else if (f.field_type === 'textarea') {
+                bodyHtml = `
+                    <textarea class="form-control" placeholder="${escapeHtml(f.placeholder || 'Teks jawaban panjang...')}" disabled style="min-height: 60px; background: #f8fafc; margin-top: 4px;"></textarea>
+                    <input type="text" 
+                           class="inline-placeholder-input" 
+                           value="${escapeHtml(f.placeholder || '')}" 
+                           placeholder="✏️ Ubah teks petunjuk (placeholder)..." 
+                           oninput="handleDirectPlaceholderChange(${idx}, this.value)"
+                           onclick="event.stopPropagation()">
+                `;
+            } else if (f.field_type === 'dropdown') {
+                bodyHtml = `
+                    <div class="inline-options-container">
+                        ${f.options.map((opt, optIdx) => `
+                            <div class="inline-option-row">
+                                <span class="inline-option-marker">🔻</span>
+                                <input type="text" 
+                                       class="inline-option-input" 
+                                       value="${escapeHtml(opt)}" 
+                                       placeholder="Pilihan ${optIdx + 1}"
+                                       oninput="handleDirectOptionChange(${idx}, ${optIdx}, this.value)" 
+                                       onclick="event.stopPropagation()" 
+                                       onfocus="selectField(${idx})">
+                                <button type="button" class="inline-option-del" onclick="event.stopPropagation(); removeOptionInline(${idx}, ${optIdx})" title="Hapus Pilihan">&times;</button>
+                            </div>
+                        `).join('')}
+                        <button type="button" class="inline-add-opt-btn" onclick="event.stopPropagation(); addOptionInline(${idx})">
+                            ➕ Tambah Pilihan Dropdown
+                        </button>
+                    </div>
+                `;
+            } else if (f.field_type === 'radio') {
+                bodyHtml = `
+                    <div class="inline-options-container">
+                        ${f.options.map((opt, optIdx) => `
+                            <div class="inline-option-row">
+                                <span class="inline-option-marker">🔘</span>
+                                <input type="text" 
+                                       class="inline-option-input" 
+                                       value="${escapeHtml(opt)}" 
+                                       placeholder="Pilihan ${optIdx + 1}"
+                                       oninput="handleDirectOptionChange(${idx}, ${optIdx}, this.value)" 
+                                       onclick="event.stopPropagation()" 
+                                       onfocus="selectField(${idx})">
+                                <button type="button" class="inline-option-del" onclick="event.stopPropagation(); removeOptionInline(${idx}, ${optIdx})" title="Hapus Pilihan">&times;</button>
+                            </div>
+                        `).join('')}
+                        <button type="button" class="inline-add-opt-btn" onclick="event.stopPropagation(); addOptionInline(${idx})">
+                            ➕ Tambah Pilihan Radio
+                        </button>
+                    </div>
+                `;
+            } else if (f.field_type === 'checkbox') {
+                bodyHtml = `
+                    <div class="inline-options-container">
+                        ${f.options.map((opt, optIdx) => `
+                            <div class="inline-option-row">
+                                <span class="inline-option-marker">☑️</span>
+                                <input type="text" 
+                                       class="inline-option-input" 
+                                       value="${escapeHtml(opt)}" 
+                                       placeholder="Pilihan ${optIdx + 1}"
+                                       oninput="handleDirectOptionChange(${idx}, ${optIdx}, this.value)" 
+                                       onclick="event.stopPropagation()" 
+                                       onfocus="selectField(${idx})">
+                                <button type="button" class="inline-option-del" onclick="event.stopPropagation(); removeOptionInline(${idx}, ${optIdx})" title="Hapus Pilihan">&times;</button>
+                            </div>
+                        `).join('')}
+                        <button type="button" class="inline-add-opt-btn" onclick="event.stopPropagation(); addOptionInline(${idx})">
+                            ➕ Tambah Pilihan Centang
+                        </button>
+                    </div>
+                `;
+            } else if (f.field_type === 'file' || f.field_type === 'image') {
+                bodyHtml = `
+                    <div style="border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 16px; background: #f8fafc; display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px; margin-top: 4px;">
+                        <span>${f.field_type === 'image' ? '🖼️' : '📎'}</span>
+                        <span>Area unggah berkas oleh responden</span>
+                    </div>
+                `;
+            } else {
+                bodyHtml = `
+                    <input type="text" 
+                           class="inline-placeholder-input" 
+                           value="${escapeHtml(f.placeholder || '')}" 
+                           placeholder="✏️ Tulis teks petunjuk isian (placeholder)..." 
+                           oninput="handleDirectPlaceholderChange(${idx}, this.value)"
+                           onclick="event.stopPropagation()">
+                `;
+            }
+        }
+
+        // Trigger fields dropdown (other fields for conditional logic)
+        const triggerFields = fields.filter((item, i) => i !== idx && item.field_type !== 'heading' && item.field_type !== 'description');
+        let triggerOptionsHtml = '';
+        triggerFields.forEach(tf => {
+            const isSel = (condLogic.target_field === tf.field_name);
+            triggerOptionsHtml += `<option value="${escapeHtml(tf.field_name)}" ${isSel ? 'selected' : ''}>[${escapeHtml(tf.label)}] ({{${escapeHtml(tf.field_name)}}})</option>`;
+        });
+
+        // Inline Conditional Logic Box
+        const condBoxHtml = `
+            <div id="inline-cond-box-${idx}" class="inline-cond-box" style="display: ${condLogic.enabled ? 'block' : 'none'};">
+                <div class="flex items-center justify-between">
+                    <div style="font-size: 12px; font-weight: 800; color: #92400e;">
+                        🔀 Aturan Logika Bersyarat (Tampilkan / Sembunyikan Pertanyaan Ini)
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); toggleInlineCondLogic(${idx}, false)" style="font-size: 11px; padding: 2px 8px;">
+                        ✕ Matikan Logika
+                    </button>
+                </div>
+
+                <div class="inline-cond-grid">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 3px;">Aksi Pertanyaan Ini:</label>
+                        <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateInlineCondProp(${idx}, 'action', this.value)" onclick="event.stopPropagation()">
+                            <option value="show" ${condLogic.action === 'show' ? 'selected' : ''}>👁️ Ditampilkan (Show)</option>
+                            <option value="hide" ${condLogic.action === 'hide' ? 'selected' : ''}>🚫 Disembunyikan (Hide)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 3px;">Jika Pertanyaan Pemicu:</label>
+                        <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateInlineCondProp(${idx}, 'target_field', this.value)" onclick="event.stopPropagation()">
+                            <option value="">-- Pilih Pertanyaan --</option>
+                            ${triggerOptionsHtml}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 3px;">Kondisi Jawaban:</label>
+                        <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateInlineCondProp(${idx}, 'operator', this.value)" onclick="event.stopPropagation()">
+                            <option value="equals" ${condLogic.operator === 'equals' ? 'selected' : ''}>Sama persis ( = )</option>
+                            <option value="not_equals" ${condLogic.operator === 'not_equals' ? 'selected' : ''}>Tidak sama dengan ( != )</option>
+                            <option value="contains" ${condLogic.operator === 'contains' ? 'selected' : ''}>Mengandung kata (contains)</option>
+                            <option value="not_empty" ${condLogic.operator === 'not_empty' ? 'selected' : ''}>Diisi / Tidak Kosong</option>
+                            <option value="empty" ${condLogic.operator === 'empty' ? 'selected' : ''}>Kosong / Belum Diisi</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 3px;">Nilai Jawaban Pemicu:</label>
+                        <input type="text" class="form-control" style="font-size: 12px; padding: 5px 8px;" placeholder="Contoh: Ya" value="${escapeHtml(condLogic.value || '')}" oninput="updateInlineCondProp(${idx}, 'value', this.value)" onclick="event.stopPropagation()" ${condLogic.operator === 'not_empty' || condLogic.operator === 'empty' ? 'disabled' : ''}>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Required switch for input questions
+        let reqToggleHtml = '';
+        if (f.field_type !== 'heading' && f.field_type !== 'description') {
+            reqToggleHtml = `
+                <label class="inline-req-toggle" onclick="event.stopPropagation()">
+                    <input type="checkbox" ${f.is_required ? 'checked' : ''} onchange="handleDirectRequiredToggle(${idx}, this.checked)">
+                    <span>Wajib Diisi</span>
+                </label>
             `;
         }
 
-        // Conditional Logic Badge on Card
-        const cond = (f.settings && f.settings.conditional_logic && f.settings.conditional_logic.enabled && f.settings.conditional_logic.target_field) ? f.settings.conditional_logic : null;
-        let condBadgeHtml = '';
-        if (cond) {
-            condBadgeHtml = `<div class="mt-2" style="font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
-                <span>🔀</span>
-                <span><strong>${cond.action === 'show' ? 'Tampil' : 'Sembunyi'}</strong> jika <code>{{${escapeHtml(cond.target_field)}}}</code> ${cond.operator === 'equals' ? '==' : (cond.operator === 'not_equals' ? '!=' : cond.operator)} <strong>"${escapeHtml(cond.value || '')}"</strong></span>
-            </div>`;
-        }
+        // Tag variable for Word
+        const varTagHtml = `
+            <div class="inline-var-wrapper" onclick="event.stopPropagation()">
+                <span style="font-size: 11px; font-weight: 700;">Tag Word:</span>
+                <div class="inline-var-box" title="Kunci variable untuk menghubungkan pertanyaan ini ke template Word">
+                    <span>{{</span>
+                    <input type="text" 
+                           class="inline-var-input" 
+                           value="${escapeHtml(f.field_name)}" 
+                           oninput="handleDirectFieldNameChange(${idx}, this.value)" 
+                           placeholder="nama_variable"
+                           onclick="event.stopPropagation()">
+                    <span>}}</span>
+                </div>
+            </div>
+        `;
+
+        // Conditional Logic Toggle Button
+        const condBtnHtml = `
+            <button type="button" 
+                    id="cond-btn-${idx}" 
+                    class="btn-cond-toggle ${condLogic.enabled ? 'active' : ''}" 
+                    onclick="event.stopPropagation(); toggleInlineCondLogic(${idx})">
+                🔀 ${condLogic.enabled ? 'Logika Aktif' : '+ Logika Bersyarat'}
+            </button>
+        `;
 
         card.innerHTML = `
-            <div class="field-toolbar">
-                <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, -1)" title="Pindah ke Atas">▲</button>
-                <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, 1)" title="Pindah ke Bawah">▼</button>
-                <button type="button" class="field-btn edit" onclick="event.stopPropagation(); selectField(${idx}, true)" title="Edit Pengaturan Field">⚙️ Edit</button>
-                <button type="button" class="field-btn" onclick="event.stopPropagation(); duplicateField(${idx})" title="Duplikasi">📋</button>
-                <button type="button" class="field-btn delete" onclick="event.stopPropagation(); removeField(${idx})" title="Hapus">🗑️</button>
-            </div>
-            ${previewHtml}
-            <div class="flex items-center gap-2 flex-wrap mt-2">
-                <div class="text-sm text-muted" style="font-size: 11px;">
-                    Tag: <code class="field-tag-var">{{${f.field_name}}}</code>
+            <div class="field-card-header">
+                ${headerHtml}
+                <div class="field-toolbar">
+                    <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, -1)" title="Pindah ke Atas">▲</button>
+                    <button type="button" class="field-btn" onclick="event.stopPropagation(); moveField(${idx}, 1)" title="Pindah ke Bawah">▼</button>
+                    <button type="button" class="field-btn" onclick="event.stopPropagation(); duplicateField(${idx})" title="Duplikasi">📋</button>
+                    <button type="button" class="field-btn delete" onclick="event.stopPropagation(); removeField(${idx})" title="Hapus">🗑️</button>
                 </div>
-                ${condBadgeHtml}
             </div>
+            ${bodyHtml}
+            <div class="field-card-footer">
+                <div class="flex items-center gap-3 flex-wrap">
+                    ${varTagHtml}
+                    ${condBtnHtml}
+                </div>
+                <div>
+                    ${reqToggleHtml}
+                </div>
+            </div>
+            ${condBoxHtml}
         `;
         container.appendChild(card);
     });
 }
 
-function selectField(idx, openInspector = false) {
+function selectField(idx) {
     selectedIndex = idx;
+    document.querySelectorAll('.field-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === idx);
+    });
+}
+
+// ─── Direct In-Card Handlers ───
+function handleDirectLabelInput(idx, value) {
+    if (!fields[idx]) return;
+    fields[idx].label = value;
+}
+
+function handleDirectDescInput(idx, value) {
+    if (!fields[idx]) return;
+    fields[idx].description = value;
+    fields[idx].label = value;
+}
+
+function handleDirectPlaceholderChange(idx, value) {
+    if (!fields[idx]) return;
+    fields[idx].placeholder = value;
+}
+
+function handleDirectFieldNameChange(idx, value) {
+    if (!fields[idx]) return;
+    fields[idx].field_name = value;
+}
+
+function handleDirectOptionChange(fieldIdx, optIdx, value) {
+    if (!fields[fieldIdx] || !fields[fieldIdx].options) return;
+    fields[fieldIdx].options[optIdx] = value;
+}
+
+function addOptionInline(fieldIdx) {
+    if (!fields[fieldIdx]) return;
+    if (!fields[fieldIdx].options) fields[fieldIdx].options = [];
+    fields[fieldIdx].options.push(`Pilihan ${fields[fieldIdx].options.length + 1}`);
     renderCanvas();
-    if (openInspector && window.innerWidth <= 992) {
-        switchMobileBuilderPanel('inspector');
+}
+
+function removeOptionInline(fieldIdx, optIdx) {
+    if (!fields[fieldIdx] || !fields[fieldIdx].options) return;
+    if (fields[fieldIdx].options.length <= 1) {
+        showToast('warning', 'Minimal harus ada 1 pilihan.');
+        return;
+    }
+    fields[fieldIdx].options.splice(optIdx, 1);
+    renderCanvas();
+}
+
+function handleDirectRequiredToggle(idx, isRequired) {
+    if (!fields[idx]) return;
+    fields[idx].is_required = isRequired;
+    
+    // Update star indicator on card
+    const card = document.getElementById(`field-card-${idx}`);
+    if (card) {
+        const star = card.querySelector('.field-req-star');
+        if (star) star.style.display = isRequired ? 'inline' : 'none';
+    }
+}
+
+function toggleInlineCondLogic(idx, forceState = null) {
+    if (!fields[idx]) return;
+    if (!fields[idx].settings) fields[idx].settings = {};
+    if (!fields[idx].settings.conditional_logic) {
+        fields[idx].settings.conditional_logic = { action: 'show', target_field: '', operator: 'equals', value: 'Ya' };
+    }
+    
+    const currentState = fields[idx].settings.conditional_logic.enabled || false;
+    const newState = (forceState !== null) ? forceState : !currentState;
+    fields[idx].settings.conditional_logic.enabled = newState;
+    
+    const box = document.getElementById(`inline-cond-box-${idx}`);
+    const btn = document.getElementById(`cond-btn-${idx}`);
+    
+    if (box) box.style.display = newState ? 'block' : 'none';
+    if (btn) {
+        btn.classList.toggle('active', newState);
+        btn.innerHTML = `🔀 ${newState ? 'Logika Aktif' : '+ Logika Bersyarat'}`;
+    }
+}
+
+function updateInlineCondProp(idx, prop, value) {
+    if (!fields[idx]) return;
+    if (!fields[idx].settings) fields[idx].settings = {};
+    if (!fields[idx].settings.conditional_logic) {
+        fields[idx].settings.conditional_logic = { enabled: true, action: 'show', target_field: '', operator: 'equals', value: 'Ya' };
+    }
+    fields[idx].settings.conditional_logic[prop] = value;
+    if (prop === 'operator') {
+        renderCanvas();
     }
 }
 
@@ -860,7 +1460,7 @@ function addField(type) {
         label: label,
         placeholder: 'Masukkan ' + label.toLowerCase(),
         description: '',
-        is_required: true,
+        is_required: (type !== 'heading' && type !== 'description'),
         options: ['Pilihan 1', 'Pilihan 2', 'Pilihan 3'],
         settings: {
             conditional_logic: {
@@ -876,10 +1476,22 @@ function addField(type) {
     selectedIndex = fields.length - 1;
     renderCanvas();
     
+    // Auto-focus the newly added question input
+    setTimeout(() => {
+        const newCard = document.getElementById(`field-card-${selectedIndex}`);
+        if (newCard) {
+            const input = newCard.querySelector('.inline-field-title, .inline-field-desc');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }
+    }, 50);
+
     if (window.innerWidth <= 992) {
         switchMobileBuilderPanel('canvas');
     }
-    showToast('success', `Field '${label}' ditambahkan!`);
+    showToast('success', `Pertanyaan '${label}' ditambahkan! Silakan langsung ketik judulnya.`);
 }
 
 function moveField(idx, direction) {
@@ -901,239 +1513,14 @@ function duplicateField(idx) {
     fields.splice(idx + 1, 0, clone);
     selectedIndex = idx + 1;
     renderCanvas();
-    showToast('success', 'Field berhasil diduplikasi!');
+    showToast('success', 'Pertanyaan berhasil diduplikasi!');
 }
 
 function removeField(idx) {
     fields.splice(idx, 1);
     if (selectedIndex >= fields.length) selectedIndex = Math.max(0, fields.length - 1);
     renderCanvas();
-    showToast('info', 'Field dihapus.');
-}
-
-function renderInspector() {
-    const body = document.getElementById('inspector-body');
-    if (fields.length === 0 || !fields[selectedIndex]) {
-        body.innerHTML = `<p class="text-sm text-muted text-center" style="margin: 30px 0;">Belum ada field yang dipilih.</p>`;
-        return;
-    }
-
-    const f = fields[selectedIndex];
-    if (!f.settings) f.settings = {};
-    if (!f.settings.conditional_logic) {
-        f.settings.conditional_logic = {
-            enabled: false,
-            action: 'show',
-            target_field: '',
-            operator: 'equals',
-            value: 'Ya'
-        };
-    }
-    const condLogic = f.settings.conditional_logic;
-
-    // Trigger fields dropdown (other fields)
-    const triggerFields = fields.filter((item, i) => i !== selectedIndex && item.field_type !== 'heading' && item.field_type !== 'description');
-    let triggerOptionsHtml = '';
-    triggerFields.forEach(tf => {
-        const isSel = (condLogic.target_field === tf.field_name);
-        triggerOptionsHtml += `<option value="${escapeHtml(tf.field_name)}" ${isSel ? 'selected' : ''}>[${escapeHtml(tf.label)}] ({{${escapeHtml(tf.field_name)}}})</option>`;
-    });
-
-    let optionsEditorHtml = '';
-    if (['dropdown', 'radio', 'checkbox'].includes(f.field_type)) {
-        optionsEditorHtml = `
-            <div class="form-group mb-3">
-                <label class="form-label" style="font-weight: 700;">Daftar Pilihan Opsi</label>
-                <div class="flex flex-col gap-2" id="inspector-options-list">
-                    ${f.options.map((opt, optIdx) => `
-                        <div class="flex items-center gap-2">
-                            <input type="text" class="form-control" style="font-size: 13px; padding: 6px 10px;" value="${escapeHtml(opt)}" oninput="updateOption(${optIdx}, this.value)">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="removeOption(${optIdx})" style="padding: 4px 8px;">&times;</button>
-                        </div>
-                    `).join('')}
-                </div>
-                <button type="button" class="btn btn-soft-primary btn-sm w-full mt-2" onclick="addOption()">
-                    + Tambah Pilihan
-                </button>
-            </div>
-        `;
-    }
-
-    body.innerHTML = `
-        <div class="form-group mb-3">
-            <label class="form-label" style="font-weight: 700;">Label Pertanyaan</label>
-            <input type="text" class="form-control" value="${escapeHtml(f.label)}" oninput="updateFieldProp('label', this.value)">
-        </div>
-
-        <div class="form-group mb-3">
-            <label class="form-label" style="font-weight: 700;">
-                Kunci Variable <code>{{...}}</code>
-            </label>
-            <input type="text" class="form-control" value="${escapeHtml(f.field_name)}" oninput="updateFieldProp('field_name', this.value)">
-            <div class="form-help">Digunakan untuk menghubungkan pertanyaan ini ke template Word.</div>
-        </div>
-
-        ${f.field_type !== 'heading' && f.field_type !== 'description' && f.field_type !== 'signature' ? `
-            <div class="form-group mb-3">
-                <label class="form-label" style="font-weight: 700;">Placeholder / Teks Bantuan</label>
-                <input type="text" class="form-control" value="${escapeHtml(f.placeholder)}" oninput="updateFieldProp('placeholder', this.value)">
-            </div>
-        ` : ''}
-
-        ${optionsEditorHtml}
-
-        <div class="form-group mb-3 pt-2" style="border-top: 1px solid var(--border-subtle);">
-            <label class="flex items-center gap-2" style="cursor: pointer;">
-                <input type="checkbox" ${f.is_required ? 'checked' : ''} onchange="updateFieldProp('is_required', this.checked)">
-                <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Wajib Diisi (Required)</span>
-            </label>
-        </div>
-
-        <!-- ─── Logika Bersyarat (Conditional Logic) ─── -->
-        <div class="form-group mb-0 pt-3" style="border-top: 1px solid var(--border-subtle);">
-            <div class="flex items-center justify-between mb-2">
-                <div>
-                    <label class="form-label mb-0" style="font-weight: 800; font-size: 13px; color: var(--text-primary);">
-                        🔀 Logika Bersyarat
-                    </label>
-                    <div class="text-xs text-muted" style="font-size: 10px;">Tampilkan / sembunyikan pertanyaan ini</div>
-                </div>
-                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 12px;">
-                    <input type="checkbox" ${condLogic.enabled ? 'checked' : ''} onchange="toggleCondLogic(this.checked)">
-                    <span style="font-weight: 700; color: ${condLogic.enabled ? '#4f46e5' : '#64748b'};">${condLogic.enabled ? 'Aktif' : 'Nonaktif'}</span>
-                </label>
-            </div>
-
-            <div id="cond-logic-box" style="display: ${condLogic.enabled ? 'block' : 'none'}; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
-                <div class="alert alert-info mb-2" style="font-size: 11px; padding: 6px 10px; line-height: 1.4; margin-bottom: 10px;">
-                    💡 Pertanyaan <strong>"${escapeHtml(f.label)}"</strong> ini akan otomatis:
-                </div>
-
-                <div class="form-group mb-2">
-                    <label class="form-label" style="font-size: 11px; font-weight: 700;">Aksi untuk Pertanyaan Ini:</label>
-                    <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateCondProp('action', this.value)">
-                        <option value="show" ${condLogic.action === 'show' ? 'selected' : ''}>👁️ Ditampilkan (Show) — default tersembunyi</option>
-                        <option value="hide" ${condLogic.action === 'hide' ? 'selected' : ''}>🚫 Disembunyikan (Hide) — default tampil</option>
-                    </select>
-                </div>
-
-                <div class="form-group mb-2">
-                    <label class="form-label" style="font-size: 11px; font-weight: 700;">HANYA JIKA pertanyaan berikut:</label>
-                    <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateCondProp('target_field', this.value)">
-                        <option value="">-- Pilih Pertanyaan Pemicu --</option>
-                        ${triggerOptionsHtml}
-                    </select>
-                </div>
-
-                <div class="form-group mb-2">
-                    <label class="form-label" style="font-size: 11px; font-weight: 700;">Memiliki Jawaban:</label>
-                    <select class="form-control" style="font-size: 12px; padding: 5px 8px;" onchange="updateCondProp('operator', this.value)">
-                        <option value="equals" ${condLogic.operator === 'equals' ? 'selected' : ''}>Sama persis / mengandung ( = )</option>
-                        <option value="not_equals" ${condLogic.operator === 'not_equals' ? 'selected' : ''}>Tidak sama dengan ( != )</option>
-                        <option value="contains" ${condLogic.operator === 'contains' ? 'selected' : ''}>Mengandung kata (contains)</option>
-                        <option value="not_empty" ${condLogic.operator === 'not_empty' ? 'selected' : ''}>Diisi / Tidak Kosong</option>
-                        <option value="empty" ${condLogic.operator === 'empty' ? 'selected' : ''}>Kosong / Belum Diisi</option>
-                    </select>
-                </div>
-
-                ${condLogic.operator !== 'not_empty' && condLogic.operator !== 'empty' ? `
-                    <div class="form-group mb-0">
-                        <label class="form-label" style="font-size: 11px; font-weight: 700;">Nilai Jawaban Pemicu:</label>
-                        <input type="text" class="form-control" style="font-size: 12px; padding: 5px 8px;" placeholder="Contoh: Ya / Punya / Guru" value="${escapeHtml(condLogic.value || '')}" oninput="updateCondProp('value', this.value)">
-                        <div class="form-help" style="font-size: 10px;">Masukkan kata kunci jawaban (misal: "Ya").</div>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-function toggleCondLogic(enabled) {
-    if (!fields[selectedIndex]) return;
-    if (!fields[selectedIndex].settings) fields[selectedIndex].settings = {};
-    if (!fields[selectedIndex].settings.conditional_logic) {
-        fields[selectedIndex].settings.conditional_logic = { action: 'show', target_field: '', operator: 'equals', value: 'Ya' };
-    }
-    fields[selectedIndex].settings.conditional_logic.enabled = enabled;
-    renderInspector();
-    renderCanvasOnly();
-}
-
-function updateCondProp(prop, value) {
-    if (!fields[selectedIndex]) return;
-    if (!fields[selectedIndex].settings) fields[selectedIndex].settings = {};
-    if (!fields[selectedIndex].settings.conditional_logic) {
-        fields[selectedIndex].settings.conditional_logic = { enabled: true, action: 'show', target_field: '', operator: 'equals', value: 'Ya' };
-    }
-    fields[selectedIndex].settings.conditional_logic[prop] = value;
-    if (prop === 'operator') {
-        renderInspector();
-    }
-    renderCanvasOnly();
-}
-
-function updateFieldProp(prop, value) {
-    if (!fields[selectedIndex]) return;
-    fields[selectedIndex][prop] = value;
-    updateSelectedCardPreview();
-}
-
-function updateSelectedCardPreview() {
-    if (!fields[selectedIndex]) return;
-    const f = fields[selectedIndex];
-    const card = document.querySelectorAll('.field-card')[selectedIndex];
-    if (!card) {
-        renderCanvas();
-        return;
-    }
-
-    const labelElem = card.querySelector('.field-label-text');
-    if (labelElem) {
-        labelElem.textContent = f.label;
-    }
-
-    const tagElem = card.querySelector('.field-tag-var');
-    if (tagElem) {
-        tagElem.textContent = '{{' + f.field_name + '}}';
-    }
-
-    const inputElem = card.querySelector('.form-control');
-    if (inputElem && f.placeholder !== undefined) {
-        inputElem.placeholder = f.placeholder;
-    }
-
-    const descElem = card.querySelector('.field-desc-text');
-    if (descElem) {
-        descElem.textContent = f.description || f.label;
-    }
-
-    const reqElem = card.querySelector('.field-req-star');
-    if (reqElem) {
-        reqElem.style.display = f.is_required ? 'inline' : 'none';
-    }
-}
-
-function addOption() {
-    if (!fields[selectedIndex]) return;
-    fields[selectedIndex].options.push(`Pilihan ${fields[selectedIndex].options.length + 1}`);
-    renderCanvas();
-}
-
-function updateOption(optIndex, value) {
-    if (!fields[selectedIndex]) return;
-    fields[selectedIndex].options[optIndex] = value;
-    // Update preview in canvas without rebuilding inspector
-    renderCanvasOnly();
-}
-
-function removeOption(optIndex) {
-    if (!fields[selectedIndex]) return;
-    if (fields[selectedIndex].options.length <= 1) {
-        showToast('warning', 'Minimal harus ada 1 pilihan.');
-        return;
-    }
-    fields[selectedIndex].options.splice(optIndex, 1);
-    renderCanvas();
+    showToast('info', 'Pertanyaan dihapus.');
 }
 
 async function saveBuilder() {
@@ -1254,3 +1641,4 @@ function escapeHtml(text) {
     return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 </script>
+
