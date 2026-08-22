@@ -44,4 +44,10 @@ class HomeController
             'footerText'      => $settingModel->get('site_footer_text', '© 2026 ASR FORM. All rights reserved.'),
         ], 'public');
     }
+
+    public function updateDatabase(): void
+    {
+        require_once BASE_PATH . '/public/update_db.php';
+        exit;
+    }
 }

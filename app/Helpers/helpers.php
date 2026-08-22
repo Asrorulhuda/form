@@ -97,7 +97,16 @@ if (!function_exists('url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return base_url('assets/' . ltrim($path, '/'));
+        $path = trim($path);
+        if ($path === '') return '';
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'uploads/') || str_starts_with($cleanPath, 'assets/')) {
+            return base_url($cleanPath);
+        }
+        return base_url('assets/' . $cleanPath);
     }
 }
 

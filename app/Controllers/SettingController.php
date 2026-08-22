@@ -229,11 +229,11 @@ class SettingController
         // Handle QRIS Image Upload
         if (!empty($_FILES['payment_qris_image_file']['name']) && $_FILES['payment_qris_image_file']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['payment_qris_image_file'];
-            $uploadDir = BASE_PATH . '/uploads/qris';
+            $uploadDir = BASE_PATH . '/public/uploads/qris';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $filename = 'qris_' . time() . '.' . $ext;
             if (move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
                 $data['payment_qris_image'] = 'uploads/qris/' . $filename;

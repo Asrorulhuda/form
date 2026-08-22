@@ -30,6 +30,17 @@ if (!empty($currentSection['fields']) || empty($sections)) {
 
 $totalSections = count($sections);
 $hasMultipleSections = $totalSections > 1;
+
+// Form Background & Theme Settings
+$formSettings = json_decode($form->settings_json ?? '{}', true) ?: [];
+$theme = $formSettings['theme'] ?? [];
+$bgImageRel = !empty($theme['bg_image']) ? $theme['bg_image'] : '';
+$bgImageUrl = $bgImageRel ? (str_starts_with($bgImageRel, 'http') ? $bgImageRel : url($bgImageRel)) : '';
+$bgType = $theme['bg_type'] ?? ($bgImageUrl ? 'image' : 'default');
+$bgPreset = $theme['bg_preset'] ?? '';
+$bgOverlay = $theme['bg_overlay'] ?? 'light';
+$cardStyle = $theme['card_style'] ?? 'glass';
+$hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'default');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -58,7 +69,95 @@ $hasMultipleSections = $totalSections > 1;
             padding: 36px 16px 80px;
             color: #1e293b;
             -webkit-font-smoothing: antialiased;
+            position: relative;
         }
+
+        <?php if (!empty($bgImageUrl)): ?>
+        body.has-custom-bg {
+            background-image: url('<?= $bgImageUrl ?>') !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+        }
+        <?php elseif (!empty($bgPreset) && $bgPreset !== 'default'): ?>
+            <?php if ($bgPreset === 'mesh-indigo'): ?>
+            body.has-custom-bg {
+                background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 40%, #fae8ff 100%) !important;
+                background-attachment: fixed !important;
+            }
+            <?php elseif ($bgPreset === 'mesh-sunset'): ?>
+            body.has-custom-bg {
+                background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 40%, #fee2e2 100%) !important;
+                background-attachment: fixed !important;
+            }
+            <?php elseif ($bgPreset === 'mesh-emerald'): ?>
+            body.has-custom-bg {
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 40%, #e0f2fe 100%) !important;
+                background-attachment: fixed !important;
+            }
+            <?php elseif ($bgPreset === 'mesh-dark'): ?>
+            body.has-custom-bg {
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+                background-attachment: fixed !important;
+            }
+            <?php elseif ($bgPreset === 'dots-clean'): ?>
+            body.has-custom-bg {
+                background-color: #f8fafc !important;
+                background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px) !important;
+                background-size: 24px 24px !important;
+                background-attachment: fixed !important;
+            }
+            <?php endif; ?>
+        <?php endif; ?>
+
+        /* ─── Background Overlay Layer ─── */
+        .bg-overlay-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-overlay-layer.bg-overlay-light {
+            background: rgba(248, 250, 252, 0.72);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .bg-overlay-layer.bg-overlay-blur {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.45);
+        }
+        .bg-overlay-layer.bg-overlay-dark {
+            background: rgba(15, 23, 42, 0.62);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .bg-overlay-layer.bg-overlay-none {
+            display: none;
+        }
+
+        body.has-custom-bg .public-container {
+            position: relative;
+            z-index: 1;
+        }
+        body.has-custom-bg .form-header-card,
+        body.has-custom-bg .field-box,
+        body.has-custom-bg .section-banner-card,
+        body.has-custom-bg .step-progress-wrapper,
+        body.has-custom-bg .step-nav-bar,
+        body.has-custom-bg .card,
+        body.has-custom-bg .form-success-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
+        }
+
         .public-container {
             max-width: 700px;
             margin: 0 auto;
@@ -556,7 +655,11 @@ $hasMultipleSections = $totalSections > 1;
         }
     </style>
 </head>
-<body>
+<body class="<?= $hasCustomBg ? 'has-custom-bg' : '' ?>">
+
+    <?php if ($hasCustomBg): ?>
+        <div class="bg-overlay-layer bg-overlay-<?= htmlspecialchars($bgOverlay) ?>"></div>
+    <?php endif; ?>
 
     <div class="public-container">
         <?= renderAd('FORM_TOP') ?>

@@ -18,9 +18,9 @@ $success = Session::getFlash('contact_success');
 
 <section class="page-section">
     <div class="container">
-        <div class="contact-grid">
-            <!-- Contact Form -->
-            <div class="page-content-card">
+        <div class="bento-grid">
+            <!-- Contact Form (Bento Span 7) -->
+            <div class="bento-col-7 bento-card fade-in">
                 <?php if ($success): ?>
                     <div class="alert alert-success">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -39,27 +39,29 @@ $success = Session::getFlash('contact_success');
                     </div>
                 <?php endif; ?>
 
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);">Kirimkan Pesan Anda</h3>
+
                 <form method="POST" action="<?= url('contact') ?>" id="contact-form">
                     <?= CSRF::field() ?>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label" for="contact-name">Nama <span class="required">*</span></label>
                         <input type="text" id="contact-name" name="name" class="form-control" required minlength="2" maxlength="100" value="<?= e($old['name'] ?? '') ?>" placeholder="Nama lengkap Anda">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label" for="contact-email">Email <span class="required">*</span></label>
                         <input type="email" id="contact-email" name="email" class="form-control" required maxlength="150" value="<?= e($old['email'] ?? '') ?>" placeholder="email@contoh.com">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label" for="contact-subject">Subjek <span class="required">*</span></label>
                         <input type="text" id="contact-subject" name="subject" class="form-control" required minlength="3" maxlength="255" value="<?= e($old['subject'] ?? '') ?>" placeholder="Perihal pesan Anda">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-4">
                         <label class="form-label" for="contact-message">Pesan <span class="required">*</span></label>
-                        <textarea id="contact-message" name="message" class="form-control" rows="6" required minlength="10" placeholder="Tulis pesan Anda di sini..."><?= e($old['message'] ?? '') ?></textarea>
+                        <textarea id="contact-message" name="message" class="form-control" rows="5" required minlength="10" placeholder="Tulis pesan Anda di sini..."><?= e($old['message'] ?? '') ?></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
@@ -69,11 +71,11 @@ $success = Session::getFlash('contact_success');
                 </form>
             </div>
 
-            <!-- Contact Info -->
-            <div>
+            <!-- Contact Info (Bento Span 5) -->
+            <div class="bento-col-5 flex flex-col gap-3">
                 <?php if (!empty($contactEmail) || !empty($contactPhone ?? '') || !empty($contactAddr ?? '')): ?>
-                    <div class="page-content-card contact-info-card">
-                        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Informasi Kontak</h3>
+                    <div class="bento-card fade-in" style="flex: 1;">
+                        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px; color: var(--text-primary);">Informasi Kontak</h3>
 
                         <?php if (!empty($contactEmail)): ?>
                             <div class="contact-info-item">
@@ -82,7 +84,7 @@ $success = Session::getFlash('contact_success');
                                 </div>
                                 <div>
                                     <div class="contact-info-label">Email</div>
-                                    <a href="mailto:<?= e($contactEmail) ?>" style="color: var(--primary-600); font-weight: 600;"><?= e($contactEmail) ?></a>
+                                    <a href="mailto:<?= e($contactEmail) ?>" style="color: var(--primary-600); font-weight: 600; text-decoration: none;"><?= e($contactEmail) ?></a>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -93,8 +95,8 @@ $success = Session::getFlash('contact_success');
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                                 </div>
                                 <div>
-                                    <div class="contact-info-label">Telepon</div>
-                                    <span style="font-weight: 600;"><?= e($contactPhone) ?></span>
+                                    <div class="contact-info-label">Telepon / WhatsApp</div>
+                                    <span style="font-weight: 600; color: var(--text-primary);"><?= e($contactPhone) ?></span>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -105,13 +107,18 @@ $success = Session::getFlash('contact_success');
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                 </div>
                                 <div>
-                                    <div class="contact-info-label">Alamat</div>
-                                    <span style="font-weight: 600;"><?= e($contactAddr) ?></span>
+                                    <div class="contact-info-label">Alamat Kantor</div>
+                                    <span style="font-weight: 600; color: var(--text-primary);"><?= e($contactAddr) ?></span>
                                 </div>
                             </div>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
+
+                <div class="bento-card fade-in" style="background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02)); border-color: rgba(99,102,241,0.2);">
+                    <div style="font-size: 14px; font-weight: 800; color: var(--primary-700); margin-bottom: 4px;">⚡ Dukungan Cepat & Responsif</div>
+                    <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0;">Tim kami siap membantu integrasi form, template custom, dan bantuan teknis instansi Anda.</p>
+                </div>
             </div>
         </div>
     </div>

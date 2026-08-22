@@ -10,9 +10,11 @@ use App\Core\View;
 use App\Core\Response;
 use App\Models\AuditLog;
 use App\Services\WordTemplateEngine;
+use App\Services\HtmlToDocxService;
+use App\Services\DocxParser;
 
 /**
- * Template Controller - Word (.DOCX) Template Engine & Variable Mapping
+ * Template Controller - Word (.DOCX) Template Engine, Professional Letter Editor & Variable Mapping
  */
 class TemplateController
 {
@@ -82,14 +84,339 @@ class TemplateController
     }
 
     /**
-     * Show create/upload template view
+     * Show create template view (Selector: Editor Visual or Upload Word File)
      */
     public function create(): void
     {
         View::page('templates.create', [
             'title'     => 'Tambah Template Surat Word (.DOCX)',
-            'pageTitle' => 'Upload Template Word',
+            'pageTitle' => 'Buat / Upload Template Surat',
         ]);
+    }
+
+    /**
+     * Show dedicated Professional Visual Letter Editor
+     */
+    public function editor(): void
+    {
+        $preset = $_GET['preset'] ?? '';
+
+        View::page('templates.editor', [
+            'title'     => 'Editor Surat Profesional',
+            'pageTitle' => 'Editor Surat Word Profesional',
+            'template'  => null,
+            'preset'    => $preset,
+            'isEdit'    => false,
+        ]);
+    }
+
+    /**
+     * Edit existing template in the Professional Visual Letter Editor
+     */
+    public function edit(string $id): void
+    {
+        $templateId = (int) $id;
+        $template = $this->db->fetch("SELECT * FROM document_templates WHERE id = ?", [$templateId]);
+
+        if (!$template) {
+            Response::redirectWith(url('templates'), 'error', 'Template tidak ditemukan.');
+            return;
+        }
+
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+            Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
+            return;
+        }
+
+        // If template content is not yet saved in HTML format, parse it from DOCX
+        if (empty($template->content) && !empty($template->file_path)) {
+            $docxFullPath = BASE_PATH . '/' . $template->file_path;
+            if (file_exists($docxFullPath)) {
+                try {
+                    $template->content = DocxParser::parseToHtml($docxFullPath);
+                } catch (\Throwable $e) {
+                    $template->content = '<p>Gagal membaca format Word lama: ' . htmlspecialchars($e->getMessage()) . '</p>';
+                }
+            }
+        }
+
+        View::page('templates.editor', [
+            'title'     => 'Edit Template: ' . $template->name,
+            'pageTitle' => 'Edit Surat: ' . $template->name,
+            'template'  => $template,
+            'preset'    => '',
+            'isEdit'    => true,
+        ]);
+    }
+
+    /**
+     * Store new Letter Template created via Visual Editor
+     */
+    public function storeEditor(): void
+    {
+        CSRF::check();
+
+        $name = trim($_POST['name'] ?? '');
+        $category = trim($_POST['category'] ?? 'Surat Keterangan');
+        $description = trim($_POST['description'] ?? '');
+        $status = in_array($_POST['status'] ?? '', ['active', 'inactive']) ? $_POST['status'] : 'active';
+        $content = trim($_POST['content'] ?? '');
+
+        if ($name === '') {
+            Session::flash('error', 'Nama template wajib diisi.');
+            Response::redirect(url('templates/editor'));
+            return;
+        }
+
+        if ($content === '') {
+            Session::flash('error', 'Isi surat dalam editor tidak boleh kosong.');
+            Response::redirect(url('templates/editor'));
+            return;
+        }
+
+        $storageDir = BASE_PATH . '/storage/templates/documents/';
+        if (!is_dir($storageDir)) {
+            mkdir($storageDir, 0755, true);
+        }
+
+        $randomFilename = 'template_' . bin2hex(random_bytes(10)) . '.docx';
+        $targetPath = $storageDir . $randomFilename;
+        $relativePath = 'storage/templates/documents/' . $randomFilename;
+
+        try {
+            // 1. Generate clean Microsoft Word .docx from Editor HTML
+            $converter = new HtmlToDocxService();
+            $converter->convert($content, $targetPath);
+
+            // 2. Extract detected {{variables}} from generated DOCX and content
+            $detectedVariables = WordTemplateEngine::extractVariables($targetPath);
+            preg_match_all('/\{\{([a-zA-Z0-9_]+)\}\}/', $content, $contentMatches);
+            if (!empty($contentMatches[1])) {
+                foreach ($contentMatches[1] as $cVar) {
+                    if (!in_array($cVar, $detectedVariables)) {
+                        $detectedVariables[] = $cVar;
+                    }
+                }
+            }
+
+            // 3. Insert into document_templates table
+            $originalFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name) . '.docx';
+            $templateId = $this->db->insert('document_templates', [
+                'user_id'           => Auth::id(),
+                'name'              => $name,
+                'category'          => $category,
+                'description'       => $description,
+                'file_path'         => $relativePath,
+                'original_filename' => $originalFilename,
+                'version'           => 1,
+                'content'           => $content,
+                'status'            => $status,
+                'created_by'        => Auth::id(),
+                'created_at'        => date('Y-m-d H:i:s'),
+                'updated_at'        => date('Y-m-d H:i:s'),
+            ]);
+
+            // 4. Register detected variables
+            foreach ($detectedVariables as $varName) {
+                $cleanVar = trim($varName, '{} ');
+                if ($cleanVar === '') continue;
+
+                $sourceType = 'form_response';
+                $sourceKey = $cleanVar;
+
+                if (in_array($cleanVar, ['tanggal', 'tanggal_surat', 'bulan', 'tahun', 'nomor_surat', 'nomor_dokumen', 'tanggal_angka'])) {
+                    $sourceType = 'system';
+                } elseif (in_array($cleanVar, ['user_name', 'user_email', 'creator_name'])) {
+                    $sourceType = 'user';
+                } elseif (in_array($cleanVar, ['nama_instansi', 'alamat_instansi', 'telepon_instansi', 'nama_kepala', 'nip_kepala', 'nama_pejabat', 'nip_pejabat', 'jabatan_pejabat', 'kota'])) {
+                    $sourceType = 'setting';
+                }
+
+                $label = ucwords(str_replace('_', ' ', $cleanVar));
+
+                $this->db->insert('document_template_variables', [
+                    'template_id'   => $templateId,
+                    'variable_name' => $cleanVar,
+                    'label'         => $label,
+                    'source_type'   => $sourceType,
+                    'source_key'    => $sourceKey,
+                    'default_value' => null,
+                    'created_at'    => date('Y-m-d H:i:s'),
+                    'updated_at'    => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            // 5. Insert Version 1 record
+            $this->db->insert('document_template_versions', [
+                'template_id'    => $templateId,
+                'version'        => 1,
+                'file_path'      => $relativePath,
+                'variables_json' => json_encode($detectedVariables),
+                'created_by'     => Auth::id(),
+                'created_at'     => date('Y-m-d H:i:s'),
+            ]);
+
+            AuditLog::log('create', 'document_templates', (int) $templateId, "Template surat dibuat melalui Editor: {$name} (Version 1, " . count($detectedVariables) . " variable terdeteksi)");
+
+            Session::flash('success', "Template Surat berhasil dibuat dan dikonversi ke format Word (.docx)! " . count($detectedVariables) . " variabel terdeteksi.");
+            Response::redirect(url("templates/{$templateId}/mapping"));
+        } catch (\Throwable $e) {
+            if (file_exists($targetPath)) {
+                @unlink($targetPath);
+            }
+            Session::flash('error', 'Gagal memproses surat di editor: ' . $e->getMessage());
+            Response::redirect(url('templates/editor'));
+        }
+    }
+
+    /**
+     * Update Letter Template from Visual Editor
+     */
+    public function updateEditor(string $id): void
+    {
+        CSRF::check();
+
+        $templateId = (int) $id;
+        $template = $this->db->fetch("SELECT * FROM document_templates WHERE id = ?", [$templateId]);
+
+        if (!$template) {
+            Response::redirectWith(url('templates'), 'error', 'Template tidak ditemukan.');
+            return;
+        }
+
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+            Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
+            return;
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $category = trim($_POST['category'] ?? 'Surat Keterangan');
+        $description = trim($_POST['description'] ?? '');
+        $status = in_array($_POST['status'] ?? '', ['active', 'inactive']) ? $_POST['status'] : 'active';
+        $content = trim($_POST['content'] ?? '');
+
+        if ($name === '' || $content === '') {
+            Response::redirectWith(url("templates/{$templateId}/edit"), 'error', 'Nama template dan isi surat tidak boleh kosong.');
+            return;
+        }
+
+        $storageDir = BASE_PATH . '/storage/templates/documents/';
+        if (!is_dir($storageDir)) {
+            mkdir($storageDir, 0755, true);
+        }
+
+        $randomFilename = 'template_' . bin2hex(random_bytes(10)) . '.docx';
+        $targetPath = $storageDir . $randomFilename;
+        $relativePath = 'storage/templates/documents/' . $randomFilename;
+
+        try {
+            // 1. Generate updated .docx
+            $converter = new HtmlToDocxService();
+            $converter->convert($content, $targetPath);
+
+            $detectedVariables = WordTemplateEngine::extractVariables($targetPath);
+            preg_match_all('/\{\{([a-zA-Z0-9_]+)\}\}/', $content, $contentMatches);
+            if (!empty($contentMatches[1])) {
+                foreach ($contentMatches[1] as $cVar) {
+                    if (!in_array($cVar, $detectedVariables)) {
+                        $detectedVariables[] = $cVar;
+                    }
+                }
+            }
+
+            $newVersion = ((int) $template->version) + 1;
+            $originalFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name) . '.docx';
+
+            // 2. Update document_templates
+            $this->db->update('document_templates', [
+                'name'              => $name,
+                'category'          => $category,
+                'description'       => $description,
+                'file_path'         => $relativePath,
+                'original_filename' => $originalFilename,
+                'version'           => $newVersion,
+                'content'           => $content,
+                'status'            => $status,
+                'updated_at'        => date('Y-m-d H:i:s'),
+            ], 'id = ?', [$templateId]);
+
+            // 3. Add to version history
+            $this->db->insert('document_template_versions', [
+                'template_id'    => $templateId,
+                'version'        => $newVersion,
+                'file_path'      => $relativePath,
+                'variables_json' => json_encode($detectedVariables),
+                'created_by'     => Auth::id(),
+                'created_at'     => date('Y-m-d H:i:s'),
+            ]);
+
+            // 4. Sync variables
+            $existingVars = $this->db->fetchAll("SELECT variable_name FROM document_template_variables WHERE template_id = ?", [$templateId]);
+            $existingMap = array_column($existingVars, 'variable_name');
+
+            foreach ($detectedVariables as $varName) {
+                if (!in_array($varName, $existingMap)) {
+                    $cleanVar = trim($varName, '{} ');
+                    $sourceType = 'form_response';
+                    if (in_array($cleanVar, ['tanggal', 'tanggal_surat', 'bulan', 'tahun', 'nomor_surat', 'nomor_dokumen'])) $sourceType = 'system';
+                    elseif (in_array($cleanVar, ['user_name', 'user_email'])) $sourceType = 'user';
+                    elseif (in_array($cleanVar, ['nama_instansi', 'alamat_instansi', 'telepon_instansi'])) $sourceType = 'setting';
+
+                    $this->db->insert('document_template_variables', [
+                        'template_id'   => $templateId,
+                        'variable_name' => $cleanVar,
+                        'label'         => ucwords(str_replace('_', ' ', $cleanVar)),
+                        'source_type'   => $sourceType,
+                        'source_key'    => $cleanVar,
+                        'default_value' => null,
+                        'created_at'    => date('Y-m-d H:i:s'),
+                        'updated_at'    => date('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
+
+            AuditLog::log('update', 'document_templates', $templateId, "Template surat diperbarui via Editor ke Version {$newVersion}: {$name}");
+
+            Response::redirectWith(url("templates/{$templateId}/mapping"), 'success', "Template berhasil diperbarui ke Versi {$newVersion} dan dikonversi ke format Word!");
+        } catch (\Throwable $e) {
+            if (file_exists($targetPath)) {
+                @unlink($targetPath);
+            }
+            Response::redirectWith(url("templates/{$templateId}/edit"), 'error', 'Gagal memperbarui surat di editor: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Upload Image / Logo for Letter Editor via AJAX
+     */
+    public function uploadImage(): void
+    {
+        $file = $_FILES['image'] ?? null;
+        if (!$file || !isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            Response::json(['success' => false, 'message' => 'Berkas gambar tidak ditemukan.'], 400);
+            return;
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'])) {
+            Response::json(['success' => false, 'message' => 'Hanya format gambar (PNG, JPG, WEBP, SVG) yang didukung.'], 400);
+            return;
+        }
+
+        $uploadDir = BASE_PATH . '/storage/templates/images/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $filename = 'img_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $targetPath = $uploadDir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            $url = url('storage/templates/images/' . $filename);
+            Response::json(['success' => true, 'url' => $url]);
+        } else {
+            Response::json(['success' => false, 'message' => 'Gagal mengunggah gambar ke server.'], 500);
+        }
     }
 
     /**

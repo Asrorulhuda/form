@@ -33,6 +33,10 @@ $router->get('verify/{token}', 'PublicFormController', 'verify');
 $router->post('webhook/github', 'WebhookController', 'github');
 $router->post('api/webhook/github', 'WebhookController', 'github');
 
+// Web Database Updater (Direct Browser Access for Hosting / Local)
+$router->get('update-database', 'HomeController', 'updateDatabase');
+$router->get('database/update', 'HomeController', 'updateDatabase');
+
 // ──────────────────────────────────────────
 // Protected Routes (Auth Required)
 // ──────────────────────────────────────────
@@ -47,15 +51,22 @@ $router->post('forms/store', 'FormController', 'store', ['AuthMiddleware']);
 $router->get('forms/{id}/builder', 'FormController', 'builder', ['AuthMiddleware']);
 $router->post('forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware']);
 $router->post('api/forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware']);
+$router->post('forms/{id}/upload-bg', 'FormController', 'uploadBackground', ['AuthMiddleware']);
+$router->post('forms/{id}/delete-bg', 'FormController', 'deleteBackground', ['AuthMiddleware']);
 $router->get('forms/{id}/responses', 'FormController', 'responses', ['AuthMiddleware']);
 $router->get('forms/{id}/responses/export', 'FormController', 'exportResponses', ['AuthMiddleware']);
 $router->post('forms/{id}/responses/clear', 'FormController', 'clearResponses', ['AuthMiddleware']);
 $router->post('forms/{id}/responses/{responseId}/delete', 'FormController', 'deleteResponse', ['AuthMiddleware']);
 $router->post('forms/{id}/delete', 'FormController', 'destroy', ['AuthMiddleware']);
 
-// Document Templates (Word .DOCX Engine)
+// Document Templates (Word .DOCX Engine & Professional Letter Editor)
 $router->get('templates', 'TemplateController', 'index', ['AuthMiddleware']);
 $router->get('templates/create', 'TemplateController', 'create', ['AuthMiddleware']);
+$router->get('templates/editor', 'TemplateController', 'editor', ['AuthMiddleware']);
+$router->post('templates/store-editor', 'TemplateController', 'storeEditor', ['AuthMiddleware']);
+$router->get('templates/{id}/edit', 'TemplateController', 'edit', ['AuthMiddleware']);
+$router->post('templates/{id}/update-editor', 'TemplateController', 'updateEditor', ['AuthMiddleware']);
+$router->post('templates/upload-image', 'TemplateController', 'uploadImage', ['AuthMiddleware']);
 $router->post('templates/store', 'TemplateController', 'store', ['AuthMiddleware']);
 $router->get('templates/{id}/mapping', 'TemplateController', 'mapping', ['AuthMiddleware']);
 $router->post('templates/{id}/mapping', 'TemplateController', 'saveMapping', ['AuthMiddleware']);

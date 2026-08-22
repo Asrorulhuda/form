@@ -19,7 +19,10 @@ use App\Core\View;
             </div>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
+            <a href="<?= url("templates/{$template->id}/edit") ?>" class="btn btn-primary btn-sm" style="font-weight: 800;" title="Edit Isi Surat & Kop Surat">
+                ✏️ Edit Surat &amp; Kop
+            </a>
             <a href="<?= url("templates/{$template->id}/download") ?>" class="btn btn-secondary btn-sm" title="Download File Word Asli">
                 📥 Unduh .DOCX
             </a>

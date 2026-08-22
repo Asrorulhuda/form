@@ -40,7 +40,7 @@ if ($basePath && str_starts_with($requestUri, $basePath)) {
     <?php endif; ?>
 
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><text x='50' y='68' font-size='55' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>A</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('img/logo-icon.svg') ?>">
     
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
     <?= adsenseHead() ?>
@@ -50,42 +50,45 @@ if ($basePath && str_starts_with($requestUri, $basePath)) {
     <!-- ─── Unified Public Navbar ─── -->
     <header class="public-nav">
         <div class="container public-nav-inner">
-            <a href="<?= url() ?>" class="brand-link">
-                <div class="sidebar-logo">A</div>
-                <div>
-                    <span class="brand-title"><?= e($siteName) ?></span>
-                    <span class="brand-badge">v1.1</span>
+            <a href="<?= url() ?>" class="brand-link" aria-label="<?= e($siteName) ?> Home">
+                <img src="<?= asset('img/logo-icon.svg') ?>" alt="ASR FORM Logo" class="brand-logo-img" width="38" height="38" style="display: block; border-radius: 10px;">
+                <div class="brand-text-wrap">
+                    <div class="flex items-center gap-1">
+                        <span class="brand-title" style="font-weight: 800; letter-spacing: -0.3px;"><?= e($siteName) ?></span>
+                        <span class="brand-badge" style="background: rgba(79, 70, 229, 0.1); color: var(--primary-700); font-weight: 700;">PRO</span>
+                    </div>
+                    <span style="font-size: 10.5px; color: var(--text-tertiary); font-weight: 600; line-height: 1; display: block; margin-top: 1px;">Smart Doc & Form Automation</span>
                 </div>
             </a>
 
             <button class="public-nav-toggle" id="public-nav-toggle" aria-label="Toggle navigation">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
 
             <nav class="public-nav-links" id="public-nav-links">
-                <a href="<?= url() ?>" class="nav-link-item <?= ($currentPath === '' || $currentPath === 'home') ? 'active' : '' ?>">Home</a>
+                <a href="<?= url() ?>" class="nav-link-item <?= ($currentPath === '' || $currentPath === 'home') ? 'active' : '' ?>">Beranda</a>
                 <?php if (!empty($featuresEnabled)): ?>
-                    <a href="<?= url('features') ?>" class="nav-link-item <?= $currentPath === 'features' ? 'active' : '' ?>">Fitur</a>
+                    <a href="<?= url('features') ?>" class="nav-link-item <?= $currentPath === 'features' ? 'active' : '' ?>">Fitur & Solusi</a>
                 <?php endif; ?>
                 <?php if (!empty($pricingEnabled)): ?>
-                    <a href="<?= url('pricing') ?>" class="nav-link-item <?= $currentPath === 'pricing' ? 'active' : '' ?>">Pricing</a>
+                    <a href="<?= url('pricing') ?>" class="nav-link-item <?= $currentPath === 'pricing' ? 'active' : '' ?>">Paket Layanan</a>
                 <?php endif; ?>
                 <?php if (!empty($aboutEnabled)): ?>
-                    <a href="<?= url('about') ?>" class="nav-link-item <?= $currentPath === 'about' ? 'active' : '' ?>">About</a>
+                    <a href="<?= url('about') ?>" class="nav-link-item <?= $currentPath === 'about' ? 'active' : '' ?>">Tentang</a>
                 <?php endif; ?>
                 <?php if (!empty($contactEnabled)): ?>
-                    <a href="<?= url('contact') ?>" class="nav-link-item <?= $currentPath === 'contact' ? 'active' : '' ?>">Kontak</a>
+                    <a href="<?= url('contact') ?>" class="nav-link-item <?= $currentPath === 'contact' ? 'active' : '' ?>">Kontak & Bantuan</a>
                 <?php endif; ?>
 
                 <div class="public-nav-auth">
                     <?php if ($isLoggedIn): ?>
-                        <a href="<?= url('dashboard') ?>" class="btn btn-primary btn-sm">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                            Ke Dashboard
+                        <a href="<?= url('dashboard') ?>" class="btn btn-primary btn-sm" style="box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                            Panel Dashboard
                         </a>
                     <?php else: ?>
-                        <a href="<?= url('login') ?>" class="btn btn-secondary btn-sm">Masuk</a>
-                        <a href="<?= url('register') ?>" class="btn btn-primary btn-sm">Daftar Akun</a>
+                        <a href="<?= url('login') ?>" class="btn btn-secondary btn-sm" style="font-weight: 600;">Masuk</a>
+                        <a href="<?= url('register') ?>" class="btn btn-primary btn-sm" style="box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25); font-weight: 600;">Mulai Sekarang</a>
                     <?php endif; ?>
                 </div>
             </nav>
@@ -103,55 +106,72 @@ if ($basePath && str_starts_with($requestUri, $basePath)) {
             <div class="public-footer-grid">
                 <div class="public-footer-brand">
                     <div class="flex items-center gap-2 mb-3">
-                        <div class="sidebar-logo" style="width:30px;height:30px;font-size:14px;">A</div>
-                        <strong style="font-size: 17px;"><?= e($siteName) ?></strong>
+                        <img src="<?= asset('img/logo-icon.svg') ?>" alt="ASR FORM" width="32" height="32" style="border-radius: 8px;">
+                        <div>
+                            <strong style="font-size: 17px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;"><?= e($siteName) ?></strong>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">Sistem Otomasi Formulir & Dokumen</div>
+                        </div>
                     </div>
                     <?php if (!empty($siteDesc)): ?>
-                        <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.6; margin-bottom: 12px;"><?= e($siteDesc) ?></p>
+                        <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.65; margin-bottom: 16px;"><?= e($siteDesc) ?></p>
                     <?php endif; ?>
+                    <div class="flex items-center gap-2" style="font-size: 12px; color: var(--text-tertiary);">
+                        <span style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600; color:#475569;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 256-Bit SSL Enkripsi
+                        </span>
+                        <span style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600; color:#475569;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Standar Dokumen Sah
+                        </span>
+                    </div>
                 </div>
 
                 <div class="public-footer-links">
-                    <h4>Produk & Navigasi</h4>
-                    <a href="<?= url() ?>">Home</a>
+                    <h4>Produk & Layanan</h4>
+                    <a href="<?= url() ?>">Beranda Utama</a>
                     <?php if (!empty($featuresEnabled)): ?>
                         <a href="<?= url('features') ?>">Fitur Unggulan</a>
                     <?php endif; ?>
                     <?php if (!empty($pricingEnabled)): ?>
-                        <a href="<?= url('pricing') ?>">Paket & Harga</a>
+                        <a href="<?= url('pricing') ?>">Paket & Penawaran</a>
                     <?php endif; ?>
                     <a href="<?= url('login') ?>">Masuk ke Akun</a>
-                    <a href="<?= url('register') ?>">Daftar Akun Baru</a>
+                    <a href="<?= url('register') ?>">Pendaftaran Akun Baru</a>
                 </div>
 
                 <div class="public-footer-links">
-                    <h4>Informasi</h4>
+                    <h4>Institusi & Solusi</h4>
+                    <a href="<?= url('features#administrasi') ?>">Pemerintahan & Desa</a>
+                    <a href="<?= url('features#akademik') ?>">Institusi Pendidikan</a>
+                    <a href="<?= url('features#korporat') ?>">Perusahaan & HR</a>
                     <?php if (!empty($aboutEnabled)): ?>
-                        <a href="<?= url('about') ?>">Tentang Kami</a>
+                        <a href="<?= url('about') ?>">Tentang Platform</a>
                     <?php endif; ?>
                     <?php if (!empty($contactEnabled)): ?>
-                        <a href="<?= url('contact') ?>">Hubungi Kami</a>
+                        <a href="<?= url('contact') ?>">Hubungi Bantuan</a>
                     <?php endif; ?>
                 </div>
 
                 <div class="public-footer-links">
-                    <h4>Legal & Privasi</h4>
+                    <h4>Legalitas & Keamanan</h4>
                     <?php if (!empty($privacyEnabled)): ?>
                         <a href="<?= url('privacy-policy') ?>">Kebijakan Privasi</a>
                     <?php endif; ?>
                     <?php if (!empty($termsEnabled)): ?>
-                        <a href="<?= url('terms') ?>">Syarat & Ketentuan</a>
+                        <a href="<?= url('terms') ?>">Syarat & Ketentuan Layanan</a>
                     <?php endif; ?>
+                    <a href="<?= url('contact') ?>">Layanan Dukungan</a>
                 </div>
             </div>
 
             <div class="public-footer-bottom">
                 <span><?= e($footerText) ?></span>
                 <?php if (!empty($contactEmail)): ?>
-                    <span style="color: var(--text-muted);">📧 <?= e($contactEmail) ?></span>
+                    <span style="color: var(--text-muted); font-size: 13px;">Dukungan Teknis: <a href="mailto:<?= e($contactEmail) ?>" style="color: var(--primary-600); font-weight: 600;"><?= e($contactEmail) ?></a></span>
                 <?php endif; ?>
                 <div>
-                    <a href="<?= url('login') ?>" style="color: var(--primary-600); font-weight: 700;">Masuk ke Aplikasi &rarr;</a>
+                    <a href="<?= url('login') ?>" style="color: var(--primary-600); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                        Akses Portal Pengguna &rarr;
+                    </a>
                 </div>
             </div>
         </div>

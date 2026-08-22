@@ -104,7 +104,16 @@ if (!function_exists('e')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return rtrim(env('APP_URL', ''), '/') . '/assets/' . ltrim($path, '/');
+        $path = trim($path);
+        if ($path === '') return '';
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'uploads/') || str_starts_with($cleanPath, 'assets/')) {
+            return url($cleanPath);
+        }
+        return url('assets/' . $cleanPath);
     }
 }
 

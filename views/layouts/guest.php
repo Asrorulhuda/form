@@ -10,7 +10,7 @@ use App\Core\Session;
     <title><?= e($title ?? 'ASR FORM') ?></title>
     <meta name="description" content="ASR FORM - Platform Form Builder & Document Generator">
     <?= CSRF::meta() ?>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><text x='50' y='68' font-size='55' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>A</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('img/logo-icon.svg') ?>">
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
 </head>
 <body>

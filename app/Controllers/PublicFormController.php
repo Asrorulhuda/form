@@ -362,35 +362,40 @@ class PublicFormController
         $settingModel = new \App\Models\Setting();
         $siteName = $settingModel->get('site_name', 'ASR FORM');
 
-        // ─── Send WhatsApp Notification to Respondent ───
+        // ─── Send WhatsApp Notifications in Parallel (Ultra-Fast) ───
         $wa = \App\Services\WhatsAppService::getInstance();
-        if ($wa->isEnabled() && (int)$settingModel->get('wa_notify_respondent_on_submit', '1') === 1 && !empty($respPhone)) {
-            $msg = "Halo *{$respName}*,\n\n"
-                 . "Terima kasih telah mengisi formulir *{$form->title}* di *{$siteName}*.\n"
-                 . "Respons Anda telah berhasil kami catat pada " . date('d/m/Y H:i') . " WIB.\n\n";
+        if ($wa->isEnabled()) {
+            $userMsg = null;
+            if ((int)$settingModel->get('wa_notify_respondent_on_submit', '1') === 1 && !empty($respPhone)) {
+                $userMsg = "Halo *{$respName}*,\n\n"
+                         . "Terima kasih telah mengisi formulir *{$form->title}* di *{$siteName}*.\n"
+                         . "Respons Anda telah berhasil kami catat pada " . date('d/m/Y H:i') . " WIB.\n\n";
 
-            if (!empty($generatedDocToken)) {
-                $docViewUrl = url("document/{$generatedDocToken}");
-                $msg .= "📄 *Dokumen Resmi Anda Telah Terbit:*\n"
-                      . "Nomor Dokumen: *{$docNumber}*\n"
-                      . "Lihat & Unduh Dokumen:\n🔗 {$docViewUrl}\n\n";
+                if (!empty($generatedDocToken)) {
+                    $docViewUrl = url("document/{$generatedDocToken}");
+                    $userMsg .= "📄 *Dokumen Resmi Anda Telah Terbit:*\n"
+                              . "Nomor Dokumen: *{$docNumber}*\n"
+                              . "Lihat & Unduh Dokumen:\n🔗 {$docViewUrl}\n\n";
+                }
+                $userMsg .= "Terima kasih!";
             }
-            $msg .= "Terima kasih!";
-            $wa->notifyUser($respPhone, $msg);
-        }
 
-        // ─── Send WhatsApp Notification to Admin / Form Creator ───
-        if ($wa->isEnabled() && (int)$settingModel->get('wa_notify_on_form_response', '1') === 1) {
-            $adminWaMsg = "📝 *RESPONS FORMULIR BARU — {$siteName}*\n\n"
-                        . "📋 *Formulir:* {$form->title}\n"
-                        . "👤 *Responden:* {$respName}\n"
-                        . "📱 *Kontak:* " . ($respPhone ?: '-') . " / " . ($respEmail ?: '-') . "\n"
-                        . "📅 *Waktu:* " . date('d/m/Y H:i') . " WIB\n";
+            $adminMsg = null;
+            if ((int)$settingModel->get('wa_notify_on_form_response', '1') === 1) {
+                $adminMsg = "📝 *RESPONS FORMULIR BARU — {$siteName}*\n\n"
+                          . "📋 *Formulir:* {$form->title}\n"
+                          . "👤 *Responden:* {$respName}\n"
+                          . "📱 *Kontak:* " . ($respPhone ?: '-') . " / " . ($respEmail ?: '-') . "\n"
+                          . "📅 *Waktu:* " . date('d/m/Y H:i') . " WIB\n";
 
-            if (!empty($generatedDocToken)) {
-                $adminWaMsg .= "📄 *Dokumen:* {$docNumber} (" . url("document/{$generatedDocToken}") . ")\n";
+                if (!empty($generatedDocToken)) {
+                    $adminMsg .= "📄 *Dokumen:* {$docNumber} (" . url("document/{$generatedDocToken}") . ")\n";
+                }
             }
-            $wa->notifyAdmin($adminWaMsg);
+
+            if ($userMsg || $adminMsg) {
+                $wa->notifyBoth($respPhone, $userMsg, $adminMsg);
+            }
         }
 
         // ─── Send Email Notification to Respondent ───

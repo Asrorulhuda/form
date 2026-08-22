@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="60%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="sheetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="penGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="shadowEffect" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#312e81" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Container with Refined Shadow -->
+  <rect x="10" y="10" width="100" height="100" rx="26" fill="url(#bgGrad)" filter="url(#shadowEffect)"/>
+  
+  <!-- Subtle Inner Border Glow -->
+  <rect x="11" y="11" width="98" height="98" rx="25" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
+
+  <!-- Background Layered Document (Back Sheet) -->
+  <rect x="36" y="28" width="46" height="58" rx="6" fill="#6366f1" fill-opacity="0.6" transform="rotate(6 59 57)"/>
+
+  <!-- Primary Foreground Document Sheet -->
+  <rect x="32" y="28" width="48" height="60" rx="7" fill="url(#sheetGrad)"/>
+  <rect x="32" y="28" width="48" height="60" rx="7" stroke="rgba(255,255,255,0.9)" stroke-width="1" fill="none"/>
+
+  <!-- Folded Corner Detail on Document -->
+  <path d="M66 28 L80 42 L66 42 Z" fill="#c7d2fe"/>
+  <path d="M66 28 L80 42 L66 42 Z" stroke="rgba(79,70,229,0.15)" stroke-width="0.5"/>
+
+  <!-- Document Line Placeholders (Simulating Smart Form & Content) -->
+  <rect x="40" y="44" width="22" height="3" rx="1.5" fill="#4f46e5" fill-opacity="0.8"/>
+  <rect x="40" y="52" width="32" height="2.5" rx="1.25" fill="#94a3b8"/>
+  <rect x="40" y="58" width="26" height="2.5" rx="1.25" fill="#94a3b8"/>
+
+  <!-- Verification Seal & Checkmark Node (Signifying Validated Document) -->
+  <circle cx="68" cy="74" r="13" fill="url(#accentGrad)" filter="url(#shadowEffect)"/>
+  <circle cx="68" cy="74" r="12" stroke="white" stroke-width="1.5" fill="none"/>
+  
+  <!-- Sleek Checkmark in Seal -->
+  <path d="M62.5 74 L66.5 78 L74 69.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Subtle Stylized "A" Node Apex -->
+  <path d="M47 34 L54 48 L49 48 L47 43 L45 48 L40 48 Z" fill="#4f46e5" fill-opacity="0"/>
+</svg>

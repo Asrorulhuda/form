@@ -242,14 +242,25 @@ class FormController
 
         $templateId = !empty($input['template_id']) ? (int) $input['template_id'] : null;
 
-        // Update form info including template_id & slug
+        // Process settings & theme
+        $settingsData = json_decode($form->settings_json ?? '{}', true) ?: [];
+        if (isset($input['theme'])) {
+            $settingsData['theme'] = $input['theme'];
+        }
+        if (isset($input['settings'])) {
+            $settingsData = array_merge($settingsData, $input['settings']);
+        }
+        $settingsJson = !empty($settingsData) ? json_encode($settingsData) : null;
+
+        // Update form info including template_id & slug & settings_json
         $this->db->update('forms', [
-            'title'       => $title,
-            'slug'        => $slug,
-            'description' => $description,
-            'template_id' => $templateId,
-            'status'      => $status,
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'title'         => $title,
+            'slug'          => $slug,
+            'description'   => $description,
+            'template_id'   => $templateId,
+            'status'        => $status,
+            'settings_json' => $settingsJson,
+            'updated_at'    => date('Y-m-d H:i:s'),
         ], 'id = ?', [$formId]);
 
         // Begin transaction to replace fields
@@ -304,6 +315,121 @@ class FormController
             $this->db->rollback();
             Response::error('Gagal menyimpan formulir: ' . $e->getMessage(), null, 500);
         }
+    }
+
+    /**
+     * AJAX Endpoint: Upload form background image
+     */
+    public function uploadBackground(string $id): void
+    {
+        $formId = (int) $id;
+        $form = $this->db->fetch("SELECT * FROM forms WHERE id = ?", [$formId]);
+
+        if (!$form) {
+            Response::error('Formulir tidak ditemukan.', null, 404);
+            return;
+        }
+
+        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+            Response::error('Akses ditolak.', null, 403);
+            return;
+        }
+
+        if (empty($_FILES['background_image']) || $_FILES['background_image']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('Silakan pilih file gambar background yang valid.', null, 400);
+            return;
+        }
+
+        $file = $_FILES['background_image'];
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        if ($file['size'] > $maxSize) {
+            Response::error('Ukuran file maksimal adalah 10MB.', null, 400);
+            return;
+        }
+
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedExts)) {
+            Response::error('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau SVG.', null, 400);
+            return;
+        }
+
+        $uploadDir = BASE_PATH . '/public/uploads/forms/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $filename = 'bg_' . $formId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $destPath = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            Response::error('Gagal mengunggah gambar ke server.', null, 500);
+            return;
+        }
+
+        $relPath = 'uploads/forms/' . $filename;
+        $fullUrl = url($relPath);
+
+        // Update form settings_json
+        $settingsData = json_decode($form->settings_json ?? '{}', true) ?: [];
+        if (!isset($settingsData['theme'])) {
+            $settingsData['theme'] = [];
+        }
+        $settingsData['theme']['bg_image'] = $relPath;
+        $settingsData['theme']['bg_type'] = 'image';
+
+        $this->db->update('forms', [
+            'settings_json' => json_encode($settingsData),
+            'updated_at'    => date('Y-m-d H:i:s'),
+        ], 'id = ?', [$formId]);
+
+        AuditLog::log('update', 'forms', $formId, "Mengunggah background formulir: {$form->title}");
+
+        Response::success('Background formulir berhasil diunggah!', [
+            'image_url' => $fullUrl,
+            'image_path' => $relPath,
+            'theme' => $settingsData['theme']
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint: Delete form background image
+     */
+    public function deleteBackground(string $id): void
+    {
+        $formId = (int) $id;
+        $form = $this->db->fetch("SELECT * FROM forms WHERE id = ?", [$formId]);
+
+        if (!$form) {
+            Response::error('Formulir tidak ditemukan.', null, 404);
+            return;
+        }
+
+        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+            Response::error('Akses ditolak.', null, 403);
+            return;
+        }
+
+        $settingsData = json_decode($form->settings_json ?? '{}', true) ?: [];
+        $oldImage = $settingsData['theme']['bg_image'] ?? null;
+
+        if ($oldImage) {
+            $filePath = BASE_PATH . '/public/' . ltrim($oldImage, '/');
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+            unset($settingsData['theme']['bg_image']);
+            $settingsData['theme']['bg_type'] = 'default';
+
+            $this->db->update('forms', [
+                'settings_json' => json_encode($settingsData),
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ], 'id = ?', [$formId]);
+        }
+
+        Response::success('Background formulir berhasil dihapus!', [
+            'theme' => $settingsData['theme'] ?? []
+        ]);
     }
 
     /**

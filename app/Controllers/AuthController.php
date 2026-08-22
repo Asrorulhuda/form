@@ -141,25 +141,30 @@ class AuthController
         $settingModel = new \App\Models\Setting();
         $siteName = $settingModel->get('site_name', 'ASR FORM');
 
-        // ─── 1. WhatsApp Alert to Admin ───
+        // ─── 1 & 2. WhatsApp Alerts in Parallel (Ultra-Fast) ───
         $wa = \App\Services\WhatsAppService::getInstance();
-        if ($wa->isEnabled() && (int)$settingModel->get('wa_notify_admin_on_register', '1') === 1) {
-            $waMsg = "👤 *PENDAFTARAN PENGGUNA BARU — {$siteName}*\n\n"
-                   . "📋 *Nama:* {$data['name']}\n"
-                   . "📧 *Email:* {$data['email']}\n"
-                   . "📱 *Nomor WhatsApp:* {$data['phone']}\n"
-                   . "📦 *Paket Dipilih:* {$data['plan']}\n"
-                   . "📅 *Waktu Daftar:* " . date('d/m/Y H:i') . " WIB\n\n"
-                   . "👉 Silakan tinjau dan aktifkan akun pemohon di Dashboard Admin.";
-            $wa->notifyAdmin($waMsg);
-        }
+        if ($wa->isEnabled()) {
+            $adminWaMsg = null;
+            if ((int)$settingModel->get('wa_notify_admin_on_register', '1') === 1) {
+                $adminWaMsg = "👤 *PENDAFTARAN PENGGUNA BARU — {$siteName}*\n\n"
+                            . "📋 *Nama:* {$data['name']}\n"
+                            . "📧 *Email:* {$data['email']}\n"
+                            . "📱 *Nomor WhatsApp:* {$data['phone']}\n"
+                            . "📦 *Paket Dipilih:* {$data['plan']}\n"
+                            . "📅 *Waktu Daftar:* " . date('d/m/Y H:i') . " WIB\n\n"
+                            . "👉 Silakan tinjau dan aktifkan akun pemohon di Dashboard Admin:\n" . url('admin/applicants');
+            }
 
-        // ─── 2. WhatsApp Welcome to User ───
-        if ($wa->isEnabled() && !empty($data['phone'])) {
-            $userWelcome = "Halo *{$data['name']}*, terima kasih telah mendaftar di *{$siteName}*!\n\n"
-                         . "Pendaftaran Anda untuk *Paket {$data['plan']}* telah kami terima dan sedang dalam proses verifikasi tim admin kami.\n\n"
-                         . "🌐 Kunjungi website: " . url();
-            $wa->notifyUser($data['phone'], $userWelcome);
+            $userWelcome = null;
+            if (!empty($data['phone'])) {
+                $userWelcome = "Halo *{$data['name']}*, terima kasih telah mendaftar di *{$siteName}*!\n\n"
+                             . "Pendaftaran Anda untuk *Paket {$data['plan']}* telah kami terima dan sedang dalam proses verifikasi tim admin kami.\n\n"
+                             . "🌐 Kunjungi website: " . url();
+            }
+
+            if ($adminWaMsg || $userWelcome) {
+                $wa->notifyBoth($data['phone'], $userWelcome, $adminWaMsg);
+            }
         }
 
         // ─── 3. Email Alert to Admin ───

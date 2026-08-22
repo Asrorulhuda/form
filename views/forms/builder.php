@@ -43,12 +43,15 @@ $publicUrl = url("form/{$form->slug}");
     </div>
 
     <!-- Builder Navigation Tabs -->
-    <div style="display: flex; gap: 4px; padding: 0 24px; border-top: 1px solid var(--border-subtle); background: #f8fafc;">
+    <div style="display: flex; gap: 4px; padding: 0 24px; border-top: 1px solid var(--border-subtle); background: #f8fafc; overflow-x: auto;">
         <button type="button" class="tab-btn active" id="tab-btn-fields" onclick="switchBuilderTab('fields')">
-            🎨 1. Desain Pertanyaan Formulir
+            📝 1. Pertanyaan Formulir
+        </button>
+        <button type="button" class="tab-btn" id="tab-btn-theme" onclick="switchBuilderTab('theme')">
+            🖼️ 2. Background & Tampilan
         </button>
         <button type="button" class="tab-btn" id="tab-btn-doc" onclick="switchBuilderTab('doc')">
-            📄 2. Template Surat Word Terhubung
+            📄 3. Hubungkan Surat Word
             <span class="badge badge-<?= $form->template_id ? 'success' : 'muted' ?>" id="doc-status-badge" style="margin-left: 6px; font-size: 10px;">
                 <?= $form->template_id ? 'Terhubung' : 'Opsional' ?>
             </span>
@@ -71,53 +74,76 @@ $publicUrl = url("form/{$form->slug}");
 <!-- ─── TAB 1: FORM FIELDS BUILDER ─── -->
 <div id="builder-tab-fields" class="builder-grid">
     
-    <!-- ─── LEFT: Palette Field Types ─── -->
-    <div class="card builder-panel builder-palette-panel" id="builder-panel-palette">
-        <div class="card-header" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
-            <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin: 0;">
-                ➕ Tambah Pertanyaan
-            </h3>
-            <button type="button" class="btn btn-secondary btn-sm mobile-only-btn" onclick="switchMobileBuilderPanel('canvas')" style="display: none;">
-                &larr; Selesai
-            </button>
-        </div>
-        <div class="card-body builder-palette-body" style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
-            <div class="palette-section-title">Input Teks</div>
-            <div class="palette-group-grid">
-                <button type="button" class="palette-item" onclick="addField('text')">📝 Teks Singkat</button>
-                <button type="button" class="palette-item" onclick="addField('textarea')">📄 Paragraf Panjang</button>
-                <button type="button" class="palette-item" onclick="addField('number')">🔢 Angka / Nilai</button>
-                <button type="button" class="palette-item" onclick="addField('email')">✉️ Alamat Email</button>
-                <button type="button" class="palette-item" onclick="addField('phone')">📞 No. WhatsApp</button>
+    <!-- ─── LEFT: Palette Field Types Column (Full-Height Sticky Container) ─── -->
+    <div class="builder-palette-col" id="builder-col-palette">
+        <div class="card builder-panel builder-palette-panel" id="builder-panel-palette">
+            <div class="card-header" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin: 0;">
+                    ➕ Tambah Pertanyaan
+                </h3>
+            </div>
+            <div class="card-body builder-palette-body" style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+            <!-- Palette Search Filter -->
+            <div style="margin-bottom: 6px;">
+                <input type="text" 
+                       id="palette-search-input" 
+                       class="form-control" 
+                       placeholder="🔍 Cari tipe pertanyaan..." 
+                       oninput="filterPaletteTypes(this.value)"
+                       style="font-size: 12.5px; padding: 7px 10px; border-radius: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0;">
             </div>
 
-            <div class="palette-section-title" style="margin-top: 6px;">Pilihan & Opsi</div>
-            <div class="palette-group-grid">
-                <button type="button" class="palette-item" onclick="addField('dropdown')">🔻 Dropdown</button>
-                <button type="button" class="palette-item" onclick="addField('radio')">🔘 Pilihan Tunggal</button>
-                <button type="button" class="palette-item" onclick="addField('checkbox')">☑️ Kotak Centang</button>
+            <div class="palette-category-group" data-cat="text">
+                <div class="palette-section-title">Input Teks</div>
+                <div class="palette-group-grid">
+                    <button type="button" class="palette-item" data-keywords="teks singkat nama input text" onclick="addField('text')">📝 Teks Singkat</button>
+                    <button type="button" class="palette-item" data-keywords="paragraf panjang uraian keterangan textarea alamat" onclick="addField('textarea')">📄 Paragraf Panjang</button>
+                    <button type="button" class="palette-item" data-keywords="angka nomor nilai nisn nik phone number" onclick="addField('number')">🔢 Angka / Nilai</button>
+                    <button type="button" class="palette-item" data-keywords="email surat electronic mail" onclick="addField('email')">✉️ Alamat Email</button>
+                    <button type="button" class="palette-item" data-keywords="wa whatsapp telepon hp phone" onclick="addField('phone')">📞 No. WhatsApp</button>
+                </div>
             </div>
 
-            <div class="palette-section-title" style="margin-top: 6px;">Tanggal & Waktu</div>
-            <div class="palette-group-grid">
-                <button type="button" class="palette-item" onclick="addField('date')">📅 Pemilih Tanggal</button>
-                <button type="button" class="palette-item" onclick="addField('time')">⏰ Pemilih Jam</button>
+            <div class="palette-category-group" data-cat="options" style="margin-top: 6px;">
+                <div class="palette-section-title">Pilihan & Opsi</div>
+                <div class="palette-group-grid">
+                    <button type="button" class="palette-item" data-keywords="dropdown pilih opsi menu select" onclick="addField('dropdown')">🔻 Dropdown</button>
+                    <button type="button" class="palette-item" data-keywords="radio pilihan tunggal satu opsi" onclick="addField('radio')">🔘 Pilihan Tunggal</button>
+                    <button type="button" class="palette-item" data-keywords="checkbox kotak centang checklist banyak opsi" onclick="addField('checkbox')">☑️ Kotak Centang</button>
+                </div>
             </div>
 
-            <div class="palette-section-title" style="margin-top: 6px;">Media & Tanda Tangan</div>
-            <div class="palette-group-grid">
-                <button type="button" class="palette-item" onclick="addField('signature')">✍️ Tanda Tangan</button>
-                <button type="button" class="palette-item" onclick="addField('file')">📎 Unggah Dokumen</button>
-                <button type="button" class="palette-item" onclick="addField('image')">🖼️ Unggah Foto</button>
+            <div class="palette-category-group" data-cat="datetime" style="margin-top: 6px;">
+                <div class="palette-section-title">Tanggal & Waktu</div>
+                <div class="palette-group-grid">
+                    <button type="button" class="palette-item" data-keywords="tanggal date kalender lahir hari" onclick="addField('date')">📅 Pemilih Tanggal</button>
+                    <button type="button" class="palette-item" data-keywords="waktu jam time menit schedule" onclick="addField('time')">⏰ Pemilih Jam</button>
+                </div>
             </div>
 
-            <div class="palette-section-title" style="margin-top: 6px;">Struktur & Judul</div>
-            <div class="palette-group-grid">
-                <button type="button" class="palette-item" onclick="addField('heading')">🏷️ Judul Bagian</button>
-                <button type="button" class="palette-item" onclick="addField('description')">ℹ️ Keterangan</button>
+            <div class="palette-category-group" data-cat="media" style="margin-top: 6px;">
+                <div class="palette-section-title">Media & Tanda Tangan</div>
+                <div class="palette-group-grid">
+                    <button type="button" class="palette-item" data-keywords="tanda tangan signature ttd paraf" onclick="addField('signature')">✍️ Tanda Tangan</button>
+                    <button type="button" class="palette-item" data-keywords="unggah berkas file upload lampiran dokumen pdf" onclick="addField('file')">📎 Unggah Dokumen</button>
+                    <button type="button" class="palette-item" data-keywords="unggah foto gambar image photo pasfoto" onclick="addField('image')">🖼️ Unggah Foto</button>
+                </div>
+            </div>
+
+            <div class="palette-category-group" data-cat="layout" style="margin-top: 6px;">
+                <div class="palette-section-title">Struktur & Judul</div>
+                <div class="palette-group-grid">
+                    <button type="button" class="palette-item" data-keywords="judul bagian header section step halaman" onclick="addField('heading')">🏷️ Judul Bagian</button>
+                    <button type="button" class="palette-item" data-keywords="keterangan deskripsi info petunjuk description" onclick="addField('description')">ℹ️ Keterangan</button>
+                </div>
+            </div>
+            
+            <div id="palette-empty-search" style="display: none; padding: 14px; text-align: center; font-size: 12px; color: #94a3b8;">
+                Tidak ada tipe pertanyaan yang cocok.
             </div>
         </div>
     </div>
+</div>
 
     <!-- ─── CENTER: Form Canvas ─── -->
     <div class="builder-panel builder-canvas-panel" id="builder-panel-canvas" style="display: flex; flex-direction: column; gap: 16px;">
@@ -133,11 +159,52 @@ $publicUrl = url("form/{$form->slug}");
                 <div class="flex items-center gap-2 pt-2 flex-wrap" style="border-top: 1px dashed #e2e8f0;">
                     <span class="text-sm text-muted" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Link Singkat:</span>
                     <div style="font-family: monospace; font-size: 12px; color: #4f46e5; background: #eef2ff; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 2px; max-width: 100%; overflow-x: auto;">
-                        <span><?= url() ?>/</span>
+                        <span><?= url('form/') ?>/</span>
                         <input type="text" id="form-slug-input" value="<?= e($form->slug) ?>" style="border: none; background: transparent; font-family: monospace; font-weight: bold; color: #3730a3; outline: none; width: 140px;" title="Ubah link singkat formulir">
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Canvas Toolbar: Search & Navigator Quick Jump -->
+        <div class="card" id="canvas-tools-card" style="box-shadow: var(--shadow-sm); padding: 12px 18px; background: #ffffff; border-radius: 12px; border: 1.5px solid #e2e8f0;">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <!-- Search Questions on Canvas -->
+                <div style="flex: 1; min-width: 220px; position: relative;">
+                    <input type="text" 
+                           id="canvas-search-input" 
+                           class="form-control" 
+                           placeholder="🔍 Cari pertanyaan di formulir ini (ketik judul / jenis / tag)..." 
+                           oninput="filterCanvasQuestions(this.value)"
+                           style="font-size: 13px; padding: 8px 32px 8px 12px; border-radius: 8px;">
+                    <button type="button" 
+                            id="clear-canvas-search-btn" 
+                            onclick="clearCanvasSearch()" 
+                            style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: #94a3b8; font-size: 16px; cursor: pointer;" 
+                            title="Bersihkan pencarian">
+                        &times;
+                    </button>
+                </div>
+
+                <!-- Question Jump Navigator Dropdown -->
+                <div class="flex items-center gap-2" style="flex-wrap: wrap;">
+                    <select id="canvas-jump-select" 
+                            class="form-control" 
+                            onchange="jumpToQuestion(this.value)"
+                            style="font-size: 13px; padding: 8px 12px; max-width: 260px; font-weight: 600; color: #334155; border-radius: 8px;">
+                        <option value="">📑 Lompat ke Pertanyaan...</option>
+                    </select>
+
+                    <button type="button" 
+                            class="btn btn-secondary btn-sm" 
+                            onclick="openOutlineModal()" 
+                            style="font-weight: 700; font-size: 12.5px; padding: 8px 12px; border-radius: 8px;"
+                            title="Lihat daftar susunan seluruh pertanyaan">
+                        📋 Struktur (<span id="total-questions-count">0</span>)
+                    </button>
+                </div>
+            </div>
+            <div id="search-results-info" style="display: none; font-size: 12px; color: #4338ca; font-weight: 700; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0;"></div>
         </div>
 
         <!-- Canvas Fields Container -->
@@ -290,6 +357,216 @@ $publicUrl = url("form/{$form->slug}");
     </div>
 </div>
 
+<!-- ─── TAB 3: TAMPILAN & BACKGROUND FORMULIR ─── -->
+<div id="builder-tab-theme" style="display: none; max-width: 980px; margin: 0 auto;">
+    <div class="card mb-4" style="border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+        <div class="card-header" style="padding: 20px 24px; background: #ffffff; border-bottom: 1px solid var(--border-subtle);">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                    <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin: 0;">
+                        🖼️ Kustomisasi Background & Tema Formulir Publik
+                    </h3>
+                    <p class="text-sm text-muted" style="margin: 4px 0 0;">
+                        Upload foto/gambar background sendiri atau pilih preset warna & efek transparan modern untuk tampilan form preview publik.
+                    </p>
+                </div>
+                <a href="<?= $publicUrl ?>" target="_blank" class="btn btn-soft-primary btn-sm">
+                    👁️ Buka Form Publik &nearr;
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;" class="theme-settings-grid">
+                
+                <!-- Left: Controls -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- 1. Custom Image Background Upload -->
+                    <div class="card" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <strong style="font-size: 14.5px; color: var(--text-primary);">1. Upload Foto / Gambar Background</strong>
+                                <p class="text-sm text-muted" style="margin: 2px 0 0; font-size: 12px;">Mendukung format JPG, PNG, WebP (Maks. 10MB)</p>
+                            </div>
+                            <span class="badge badge-primary" id="bg-active-badge">Aktif</span>
+                        </div>
+
+                        <!-- Dropzone Area -->
+                        <div id="bg-upload-dropzone" 
+                             onclick="document.getElementById('bg-file-input').click()"
+                             style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
+                            <input type="file" id="bg-file-input" accept="image/*" style="display: none;" onchange="handleBackgroundUpload(this.files[0])">
+                            
+                            <div id="bg-upload-idle-state">
+                                <div style="font-size: 36px; margin-bottom: 8px;">📸</div>
+                                <div style="font-weight: 700; font-size: 14px; color: var(--primary-600); margin-bottom: 4px;">
+                                    Klik atau Geser Foto ke Sini untuk Upload Background
+                                </div>
+                                <div style="font-size: 12px; color: #64748b;">
+                                    Rekomendasi resolusi 1920x1080 px untuk hasil tampilan terbaik
+                                </div>
+                            </div>
+
+                            <div id="bg-upload-loading-state" style="display: none;">
+                                <div class="spinner spinner-primary" style="margin: 0 auto 12px; width: 32px; height: 32px;"></div>
+                                <div style="font-weight: 700; font-size: 13.5px; color: var(--primary-600);">Mengunggah Background ke Server...</div>
+                            </div>
+                        </div>
+
+                        <!-- Active Image Info & Action -->
+                        <div id="bg-active-preview-row" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e2e8f0;" class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-3">
+                                <img id="bg-thumbnail-preview" src="" alt="Thumbnail" style="width: 52px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 700; color: #0f172a;" id="bg-filename-label">background_image.webp</div>
+                                    <div style="font-size: 11.5px; color: #10b981; font-weight: 600;">✓ Foto Background Terpasang</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('bg-file-input').click()">
+                                    🔄 Ganti Foto
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="handleBackgroundDelete()">
+                                    🗑️ Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Preset Background Patterns (If not using uploaded image) -->
+                    <div class="card" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                        <strong style="font-size: 14.5px; color: var(--text-primary); display: block; margin-bottom: 2px;">2. Atau Pilih Preset Warna & Motif Modern</strong>
+                        <p class="text-sm text-muted" style="margin: 0 0 12px 0; font-size: 12px;">Pilihan tema warna gradasi halus jika tidak ingin mengunggah foto</p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;" id="theme-preset-grid">
+                            <button type="button" class="theme-preset-card active" data-preset="default" onclick="selectThemePreset('default')">
+                                <div class="preset-color-box" style="background: #f8fafc; border: 1px solid #cbd5e1;"></div>
+                                <span class="preset-label">Minimal Slate</span>
+                            </button>
+                            <button type="button" class="theme-preset-card" data-preset="mesh-indigo" onclick="selectThemePreset('mesh-indigo')">
+                                <div class="preset-color-box" style="background: linear-gradient(135deg, #eef2ff, #fae8ff);"></div>
+                                <span class="preset-label">Indigo Soft</span>
+                            </button>
+                            <button type="button" class="theme-preset-card" data-preset="mesh-sunset" onclick="selectThemePreset('mesh-sunset')">
+                                <div class="preset-color-box" style="background: linear-gradient(135deg, #fff7ed, #fee2e2);"></div>
+                                <span class="preset-label">Warm Sunset</span>
+                            </button>
+                            <button type="button" class="theme-preset-card" data-preset="mesh-emerald" onclick="selectThemePreset('mesh-emerald')">
+                                <div class="preset-color-box" style="background: linear-gradient(135deg, #f0fdf4, #e0f2fe);"></div>
+                                <span class="preset-label">Fresh Emerald</span>
+                            </button>
+                            <button type="button" class="theme-preset-card" data-preset="dots-clean" onclick="selectThemePreset('dots-clean')">
+                                <div class="preset-color-box" style="background: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 10px 10px;"></div>
+                                <span class="preset-label">Grid Dots</span>
+                            </button>
+                            <button type="button" class="theme-preset-card" data-preset="mesh-dark" onclick="selectThemePreset('mesh-dark')">
+                                <div class="preset-color-box" style="background: linear-gradient(135deg, #0f172a, #1e293b);"></div>
+                                <span class="preset-label">Midnight Dark</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Overlay & Readability Filter -->
+                    <div class="card" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                        <strong style="font-size: 14.5px; color: var(--text-primary); display: block; margin-bottom: 2px;">3. Lapisan Kecerahan & Efek Buram (*Overlay*)</strong>
+                        <p class="text-sm text-muted" style="margin: 0 0 12px 0; font-size: 12px;">Menjaga agar teks pertanyaan formulir tetap tajam dan sangat mudah dibaca responden</p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <label class="theme-radio-card">
+                                <input type="radio" name="theme_bg_overlay" value="light" checked onchange="updateThemeProp('bg_overlay', 'light')">
+                                <div>
+                                    <strong>✨ Transparan Lembut</strong>
+                                    <span class="text-muted" style="display: block; font-size: 11.5px;">Rekomendasi terbaik untuk semua jenis foto</span>
+                                </div>
+                            </label>
+                            <label class="theme-radio-card">
+                                <input type="radio" name="theme_bg_overlay" value="blur" onchange="updateThemeProp('bg_overlay', 'blur')">
+                                <div>
+                                    <strong>🌫️ Efek Buram (Backdrop Blur)</strong>
+                                    <span class="text-muted" style="display: block; font-size: 11.5px;">Foto tampak artistik di balik kaca</span>
+                                </div>
+                            </label>
+                            <label class="theme-radio-card">
+                                <input type="radio" name="theme_bg_overlay" value="dark" onchange="updateThemeProp('bg_overlay', 'dark')">
+                                <div>
+                                    <strong>🌙 Lapisan Redup (Dark)</strong>
+                                    <span class="text-muted" style="display: block; font-size: 11.5px;">Cocok untuk foto yang terlalu terang</span>
+                                </div>
+                            </label>
+                            <label class="theme-radio-card">
+                                <input type="radio" name="theme_bg_overlay" value="none" onchange="updateThemeProp('bg_overlay', 'none')">
+                                <div>
+                                    <strong>🖼️ Asli Tanpa Lapisan</strong>
+                                    <span class="text-muted" style="display: block; font-size: 11.5px;">Menampilkan foto tanpa filter tambahan</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right: Interactive Live Simulation Mockup -->
+                <div style="position: sticky; top: 90px;">
+                    <div class="card" style="border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md);">
+                        <div style="padding: 10px 14px; background: #0f172a; color: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+                            <div class="flex items-center gap-2">
+                                <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #ef4444;"></span>
+                                <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #f59e0b;"></span>
+                                <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #10b981;"></span>
+                                <span style="font-size: 11.5px; font-weight: 700; margin-left: 4px; color: #cbd5e1;">Simulasi Live Preview</span>
+                            </div>
+                        </div>
+
+                        <!-- Mini Mockup Frame -->
+                        <div id="mockup-frame" style="height: 380px; position: relative; background: #f8fafc; padding: 20px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-size: cover; background-position: center;">
+                            <div id="mockup-overlay" class="mockup-overlay-layer"></div>
+                            
+                            <!-- Header Card Mockup -->
+                            <div class="mockup-card" style="position: relative; z-index: 1;">
+                                <div style="height: 4px; background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 99px; margin-bottom: 8px;"></div>
+                                <div style="font-size: 13px; font-weight: 800; color: #0f172a;" id="mockup-title"><?= e($form->title) ?></div>
+                                <div style="font-size: 10.5px; color: #64748b; margin-top: 3px;">Deskripsi formulir Anda...</div>
+                            </div>
+
+                            <!-- Sample Question Card Mockup -->
+                            <div class="mockup-card" style="position: relative; z-index: 1;">
+                                <div style="font-size: 11.5px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
+                                    1. Nama Lengkap <span style="color: #ef4444;">*</span>
+                                </div>
+                                <div style="height: 26px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; padding: 4px 8px; font-size: 10px; color: #94a3b8; display: flex; align-items: center;">
+                                    Tuliskan jawaban Anda di sini...
+                                </div>
+                            </div>
+
+                            <!-- Sample Question Card Mockup 2 -->
+                            <div class="mockup-card" style="position: relative; z-index: 1;">
+                                <div style="font-size: 11.5px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
+                                    2. Pilihan Jawaban
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <div style="font-size: 10px; padding: 3px 8px; border-radius: 4px; background: #eef2ff; color: #4338ca; font-weight: 600;">🔘 Opsi A</div>
+                                    <div style="font-size: 10px; padding: 3px 8px; border-radius: 4px; background: #f1f5f9; color: #64748b;">🔘 Opsi B</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="padding: 14px 16px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+                            <button type="button" class="btn btn-primary w-full" onclick="saveBuilder()" style="padding: 9px; font-size: 13px; font-weight: 700;">
+                                💾 Simpan Tema & Background
+                            </button>
+                            <a href="<?= $publicUrl ?>" target="_blank" class="btn btn-secondary w-full" style="padding: 8px; font-size: 12.5px; font-weight: 600; text-align: center;">
+                                👁️ Buka Tampilan Form Asli &nearr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ─── Share Modal ─── -->
 <div class="modal-backdrop" id="share-modal-backdrop"></div>
 <div class="modal" id="share-modal" style="max-width: 520px;">
@@ -323,11 +600,230 @@ $publicUrl = url("form/{$form->slug}");
     </div>
 </div>
 
+<!-- ─── Structure & Outline Navigator Modal ─── -->
+<div class="modal-backdrop" id="outline-modal-backdrop"></div>
+<div class="modal" id="outline-modal" style="max-width: 600px;">
+    <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+        <div class="flex items-center gap-2">
+            <span style="font-size: 20px;">📋</span>
+            <h3 class="modal-title" style="font-size: 16px; font-weight: 800;">Peta Struktur & Susunan Pertanyaan</h3>
+        </div>
+        <button class="modal-close" onclick="closeOutlineModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding: 18px 20px; max-height: 65vh; overflow-y: auto;">
+        <p class="text-sm text-muted" style="margin-bottom: 14px;">
+            Klik salah satu pertanyaan di bawah untuk langsung melompat ke kartu pertanyaan tersebut di kanvas:
+        </p>
+        <div id="outline-items-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Populated dynamically by JS -->
+        </div>
+    </div>
+    <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <span class="text-sm text-muted" id="outline-summary-text">Total 0 Pertanyaan</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeOutlineModal()">Tutup</button>
+    </div>
+</div>
+
+<!-- ─── Quick Add Floating Modal ─── -->
+<div class="modal-backdrop" id="quick-add-backdrop"></div>
+<div class="modal" id="quick-add-modal" style="max-width: 480px;">
+    <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+        <h3 class="modal-title" style="font-size: 15px; font-weight: 800;">➕ Tambah Pertanyaan Baru</h3>
+        <button class="modal-close" onclick="closeQuickAddModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding: 16px 20px;">
+        <input type="text" 
+               id="quick-add-search-input" 
+               class="form-control mb-3" 
+               placeholder="🔍 Ketik tipe field (cth: wa, email, berkas, pilihan)..." 
+               oninput="filterQuickAddTypes(this.value)"
+               style="font-size: 13px; padding: 8px 12px; border-radius: 8px;">
+        <div id="quick-add-grid" class="quick-add-grid-container">
+            <button type="button" class="quick-add-btn" data-kw="teks text short singkat nama" onclick="addFieldFromQuick('text')">📝 Teks Singkat</button>
+            <button type="button" class="quick-add-btn" data-kw="paragraf textarea panjang uraian alamat" onclick="addFieldFromQuick('textarea')">📄 Paragraf Panjang</button>
+            <button type="button" class="quick-add-btn" data-kw="angka number nilai nisn nik" onclick="addFieldFromQuick('number')">🔢 Angka / Nilai</button>
+            <button type="button" class="quick-add-btn" data-kw="email surat elektronik mail" onclick="addFieldFromQuick('email')">✉️ Alamat Email</button>
+            <button type="button" class="quick-add-btn" data-kw="wa whatsapp phone telepon hp" onclick="addFieldFromQuick('phone')">📞 No. WhatsApp</button>
+            <button type="button" class="quick-add-btn" data-kw="dropdown pilih menu select opsi" onclick="addFieldFromQuick('dropdown')">🔻 Dropdown</button>
+            <button type="button" class="quick-add-btn" data-kw="radio pilihan tunggal satu opsi" onclick="addFieldFromQuick('radio')">🔘 Pilihan Tunggal</button>
+            <button type="button" class="quick-add-btn" data-kw="checkbox centang kotak checklist banyak" onclick="addFieldFromQuick('checkbox')">☑️ Kotak Centang</button>
+            <button type="button" class="quick-add-btn" data-kw="tanggal date lahir kalender" onclick="addFieldFromQuick('date')">📅 Pemilih Tanggal</button>
+            <button type="button" class="quick-add-btn" data-kw="waktu jam time menit" onclick="addFieldFromQuick('time')">⏰ Pemilih Jam</button>
+            <button type="button" class="quick-add-btn" data-kw="tanda tangan signature ttd paraf" onclick="addFieldFromQuick('signature')">✍️ Tanda Tangan</button>
+            <button type="button" class="quick-add-btn" data-kw="unggah berkas file lampiran pdf docx dokumen" onclick="addFieldFromQuick('file')">📎 Unggah Dokumen</button>
+            <button type="button" class="quick-add-btn" data-kw="foto gambar image photo foto pasfoto" onclick="addFieldFromQuick('image')">🖼️ Unggah Foto</button>
+            <button type="button" class="quick-add-btn" data-kw="judul bagian heading section header step" onclick="addFieldFromQuick('heading')">🏷️ Judul Bagian</button>
+            <button type="button" class="quick-add-btn" data-kw="keterangan deskripsi petunjuk info" onclick="addFieldFromQuick('description')">ℹ️ Keterangan</button>
+        </div>
+    </div>
+</div>
+
 <style>
-/* ─── Prevent parent transform from breaking sticky ─── */
-.main-content {
+/* ─── Prevent parent transform/overflow from breaking sticky ─── */
+html, body {
+    overflow-x: clip !important;
+}
+.app-layout, .main-wrapper, .main-content {
+    overflow: visible !important;
     animation: none !important;
     transform: none !important;
+}
+
+/* ─── Theme & Background Settings Style ─── */
+@media (max-width: 900px) {
+    .theme-settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+.theme-preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.theme-preset-card:hover {
+    border-color: var(--primary-400);
+    transform: translateY(-2px);
+}
+.theme-preset-card.active {
+    border-color: var(--primary-600);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+    background: var(--primary-50);
+}
+.preset-color-box {
+    width: 100%;
+    height: 48px;
+    border-radius: 6px;
+}
+.preset-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.theme-radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.theme-radio-card:hover {
+    border-color: var(--primary-400);
+    background: #f8fafc;
+}
+.theme-radio-card input:checked ~ div strong {
+    color: var(--primary-700);
+}
+.theme-radio-card input {
+    margin-top: 3px;
+    accent-color: var(--primary-600);
+}
+
+/* Mockup Frame & Overlay */
+.mockup-overlay-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.mockup-overlay-light {
+    background: rgba(248, 250, 252, 0.75);
+    backdrop-filter: blur(3px);
+}
+.mockup-overlay-blur {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.45);
+}
+.mockup-overlay-dark {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(3px);
+}
+.mockup-overlay-none {
+    display: none;
+}
+.mockup-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    padding: 10px 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Quick Add Modal Grid ─── */
+.quick-add-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.quick-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+.quick-add-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-400);
+    color: var(--primary-700);
+    transform: translateX(2px);
+}
+
+/* ─── Jump Flash & Search Highlight Animation ─── */
+.field-card.jump-flash {
+    animation: flashHighlight 1.4s ease;
+}
+@keyframes flashHighlight {
+    0% { background: #fef08a; border-color: #eab308; box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.4); }
+    70% { background: #fef9c3; border-color: #facc15; }
+    100% { background: #ffffff; }
+}
+
+.field-card.search-match {
+    border-color: #818cf8 !important;
+    background: #fdfefe;
+}
+
+/* ─── Outline Item Style ─── */
+.outline-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.outline-item-row:hover {
+    background: #f8fafc;
+    border-color: var(--primary-400);
+    transform: translateX(3px);
+}
+.outline-item-row.heading-item {
+    background: #f8fafc;
+    border-left: 4px solid var(--primary-600);
+    font-weight: 800;
 }
 
 /* ─── 2-Column Builder Grid ─── */
@@ -335,7 +831,12 @@ $publicUrl = url("form/{$form->slug}");
     display: grid;
     grid-template-columns: 285px 1fr;
     gap: 24px;
-    align-items: start;
+    position: relative;
+}
+
+.builder-palette-col {
+    position: relative;
+    height: 100%;
 }
 
 .builder-palette-panel {
@@ -885,6 +1386,15 @@ let templateVariables = <?= json_encode($templateVariables) ?>;
 let selectedTemplateId = <?= json_encode($form->template_id ? (int)$form->template_id : null) ?>;
 let selectedIndex = 0;
 
+let formTheme = <?= json_encode(json_decode($form->settings_json ?? '{}', true)['theme'] ?? [
+    'bg_type'       => 'default',
+    'bg_image'      => '',
+    'bg_preset'     => 'default',
+    'bg_overlay'    => 'light',
+    'card_style'    => 'glass',
+    'primary_color' => '#4f46e5'
+]) ?>;
+
 let currentMobilePanel = 'canvas';
 
 function switchMobileBuilderPanel(panelName) {
@@ -908,6 +1418,7 @@ function switchMobileBuilderPanel(panelName) {
 
 document.addEventListener('DOMContentLoaded', () => {
     renderCanvas();
+    updateMockupPreview();
     if (selectedTemplateId) {
         onTemplateSelected(selectedTemplateId);
     }
@@ -929,13 +1440,27 @@ window.addEventListener('resize', () => {
 });
 
 function switchBuilderTab(tab) {
-    document.getElementById('builder-tab-fields').style.display = (tab === 'fields') ? 'grid' : 'none';
-    document.getElementById('builder-tab-doc').style.display = (tab === 'doc') ? 'block' : 'none';
-    document.getElementById('tab-btn-fields').classList.toggle('active', tab === 'fields');
-    document.getElementById('tab-btn-doc').classList.toggle('active', tab === 'doc');
+    const tabFields = document.getElementById('builder-tab-fields');
+    const tabDoc = document.getElementById('builder-tab-doc');
+    const tabTheme = document.getElementById('builder-tab-theme');
+
+    if (tabFields) tabFields.style.display = (tab === 'fields') ? 'grid' : 'none';
+    if (tabDoc) tabDoc.style.display = (tab === 'doc') ? 'block' : 'none';
+    if (tabTheme) tabTheme.style.display = (tab === 'theme') ? 'block' : 'none';
+
+    const btnFields = document.getElementById('tab-btn-fields');
+    const btnDoc = document.getElementById('tab-btn-doc');
+    const btnTheme = document.getElementById('tab-btn-theme');
+
+    if (btnFields) btnFields.classList.toggle('active', tab === 'fields');
+    if (btnDoc) btnDoc.classList.toggle('active', tab === 'doc');
+    if (btnTheme) btnTheme.classList.toggle('active', tab === 'theme');
 
     if (tab === 'doc' && selectedTemplateId) {
         renderTemplateMappingTable();
+    }
+    if (tab === 'theme') {
+        updateMockupPreview();
     }
 }
 
@@ -1075,15 +1600,33 @@ function renderCanvas() {
     const container = document.getElementById('fields-container');
     const emptyNotice = document.getElementById('empty-canvas');
     const mobCountEl = document.getElementById('mob-field-count');
+    const totalCountEl = document.getElementById('total-questions-count');
+    const outlineBadgeEl = document.getElementById('outline-count-badge');
+    const jumpSelect = document.getElementById('canvas-jump-select');
+    const outlineList = document.getElementById('outline-items-list');
+    const outlineSummary = document.getElementById('outline-summary-text');
+
     if (mobCountEl) mobCountEl.textContent = fields.length;
+    if (totalCountEl) totalCountEl.textContent = fields.length;
+    if (outlineBadgeEl) outlineBadgeEl.textContent = fields.length;
+    if (outlineSummary) outlineSummary.textContent = `Total ${fields.length} Pertanyaan (${fields.filter(f => f.field_type === 'heading').length} Bagian)`;
 
     container.innerHTML = '';
 
+    // Update Jump Select & Outline Modal List
+    if (jumpSelect) {
+        jumpSelect.innerHTML = `<option value="">📑 Lompat ke Pertanyaan (Total ${fields.length})...</option>`;
+    }
+    if (outlineList) {
+        outlineList.innerHTML = '';
+    }
+
     if (fields.length === 0) {
-        emptyNotice.style.display = 'block';
+        if (emptyNotice) emptyNotice.style.display = 'block';
+        if (outlineList) outlineList.innerHTML = `<div class="text-center text-muted" style="padding: 20px;">Belum ada pertanyaan dibuat.</div>`;
         return;
     } else {
-        emptyNotice.style.display = 'none';
+        if (emptyNotice) emptyNotice.style.display = 'none';
     }
 
     if (selectedIndex >= fields.length) {
@@ -1103,9 +1646,46 @@ function renderCanvas() {
         }
         const condLogic = f.settings.conditional_logic;
 
+        // Populate Jump Select
+        if (jumpSelect) {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            const prefix = f.field_type === 'heading' ? '🏷️ [BAGIAN]' : `#${idx + 1}`;
+            opt.textContent = `${prefix} ${f.label || 'Pertanyaan Baru'} (${getFieldTypeBadge(f.field_type)})`;
+            jumpSelect.appendChild(opt);
+        }
+
+        // Populate Outline List
+        if (outlineList) {
+            const isHeading = (f.field_type === 'heading');
+            const row = document.createElement('div');
+            row.className = `outline-item-row ${isHeading ? 'heading-item' : ''}`;
+            row.onclick = () => {
+                closeOutlineModal();
+                jumpToQuestion(idx);
+            };
+            row.innerHTML = `
+                <div class="flex items-center gap-3" style="min-width: 0;">
+                    <span style="font-weight: 800; font-size: 13px; color: ${isHeading ? '#4338ca' : '#64748b'};">${isHeading ? '🏷️' : idx + 1}</span>
+                    <div style="min-width: 0;">
+                        <strong style="font-size: 13.5px; color: #1e293b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(f.label || 'Pertanyaan Baru')}</strong>
+                        <span style="font-size: 11.5px; color: #94a3b8;">${getFieldTypeBadge(f.field_type)} ${f.is_required ? '&bull; <span style="color: #ef4444; font-weight: bold;">Wajib</span>' : ''}</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 4px 10px; border-radius: 6px;">
+                    Lompat &rarr;
+                </button>
+            `;
+            outlineList.appendChild(row);
+        }
+
         const card = document.createElement('div');
         card.className = `field-card ${idx === selectedIndex ? 'selected' : ''}`;
         card.id = `field-card-${idx}`;
+        card.dataset.index = idx;
+        card.dataset.fieldType = f.field_type;
+        card.dataset.label = (f.label || '').toLowerCase();
+        card.dataset.fieldName = (f.field_name || '').toLowerCase();
         card.onclick = () => selectField(idx);
 
         const reqBadge = `<span class="field-req-star" style="color: var(--danger-600); font-weight: 800; font-size: 16px; margin-left: 2px; display: ${f.is_required ? 'inline' : 'none'};" title="Wajib Diisi">*</span>`;
@@ -1389,6 +1969,253 @@ function selectField(idx) {
     });
 }
 
+function insertFieldAfterSelected(type) {
+    const targetIndex = (selectedIndex >= 0 && selectedIndex < fields.length) ? (selectedIndex + 1) : fields.length;
+    insertFieldAt(targetIndex, type);
+}
+
+// ─── Search & Navigation Features ───
+function filterPaletteTypes(query) {
+    const q = (query || '').trim().toLowerCase();
+    const groups = document.querySelectorAll('.palette-category-group');
+    const emptyNotice = document.getElementById('palette-empty-search');
+    let totalVisible = 0;
+
+    groups.forEach(group => {
+        const items = group.querySelectorAll('.palette-item');
+        let groupVisibleCount = 0;
+
+        items.forEach(btn => {
+            const text = (btn.textContent || '').toLowerCase();
+            const keywords = (btn.dataset.keywords || '').toLowerCase();
+            const match = (!q || text.includes(q) || keywords.includes(q));
+
+            btn.style.display = match ? 'flex' : 'none';
+            if (match) {
+                groupVisibleCount++;
+                totalVisible++;
+            }
+        });
+
+        group.style.display = (groupVisibleCount > 0) ? 'block' : 'none';
+    });
+
+    if (emptyNotice) {
+        emptyNotice.style.display = (totalVisible === 0) ? 'block' : 'none';
+    }
+}
+
+function filterCanvasQuestions(query) {
+    const q = (query || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.field-card');
+    const clearBtn = document.getElementById('clear-canvas-search-btn');
+    const resultsInfo = document.getElementById('search-results-info');
+
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    if (!q) {
+        cards.forEach(card => {
+            card.style.display = '';
+            card.classList.remove('search-match');
+        });
+        if (resultsInfo) resultsInfo.style.display = 'none';
+        return;
+    }
+
+    let matchCount = 0;
+    cards.forEach(card => {
+        const label = card.dataset.label || '';
+        const fieldName = card.dataset.fieldName || '';
+        const fieldType = card.dataset.fieldType || '';
+        const indexStr = (parseInt(card.dataset.index) + 1).toString();
+
+        const isMatch = (
+            label.includes(q) || 
+            fieldName.includes(q) || 
+            fieldType.includes(q) || 
+            indexStr === q || 
+            ('pertanyaan ' + indexStr).includes(q)
+        );
+
+        if (isMatch) {
+            card.style.display = '';
+            card.classList.add('search-match');
+            matchCount++;
+        } else {
+            card.style.display = 'none';
+            card.classList.remove('search-match');
+        }
+    });
+
+    if (resultsInfo) {
+        resultsInfo.style.display = 'block';
+        resultsInfo.textContent = `🔍 Ditemukan ${matchCount} dari ${fields.length} pertanyaan yang cocok dengan "${q}".`;
+    }
+}
+
+function clearCanvasSearch() {
+    const input = document.getElementById('canvas-search-input');
+    if (input) input.value = '';
+    filterCanvasQuestions('');
+}
+
+function jumpToQuestion(idx) {
+    if (idx === '' || idx === null || isNaN(idx)) return;
+    const targetIdx = parseInt(idx);
+    const card = document.getElementById(`field-card-${targetIdx}`);
+
+    // If canvas is filtered out, clear search first
+    const input = document.getElementById('canvas-search-input');
+    if (input && input.value) {
+        clearCanvasSearch();
+    }
+
+    if (card) {
+        selectField(targetIdx);
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.remove('jump-flash');
+        void card.offsetWidth; // Trigger reflow for restart
+        card.classList.add('jump-flash');
+
+        const titleInput = card.querySelector('.inline-field-title, .inline-field-desc');
+        if (titleInput) {
+            setTimeout(() => titleInput.focus(), 300);
+        }
+    }
+}
+
+// ─── Outline Modal Handlers ───
+function openOutlineModal() {
+    const modal = document.getElementById('outline-modal');
+    const backdrop = document.getElementById('outline-modal-backdrop');
+    if (modal && backdrop) {
+        modal.classList.add('active');
+        backdrop.classList.add('active');
+        modal.style.display = 'block';
+        backdrop.style.display = 'block';
+    }
+}
+
+function closeOutlineModal() {
+    const modal = document.getElementById('outline-modal');
+    const backdrop = document.getElementById('outline-modal-backdrop');
+    if (modal && backdrop) {
+        modal.classList.remove('active');
+        backdrop.classList.remove('active');
+        modal.style.display = 'none';
+        backdrop.style.display = 'none';
+    }
+}
+
+// ─── Floating Quick Add Modal Handlers ───
+function openQuickAddModal() {
+    const modal = document.getElementById('quick-add-modal');
+    const backdrop = document.getElementById('quick-add-backdrop');
+    if (modal && backdrop) {
+        modal.classList.add('active');
+        backdrop.classList.add('active');
+        modal.style.display = 'block';
+        backdrop.style.display = 'block';
+        const input = document.getElementById('quick-add-search-input');
+        if (input) {
+            input.value = '';
+            filterQuickAddTypes('');
+            setTimeout(() => input.focus(), 50);
+        }
+    }
+}
+
+function closeQuickAddModal() {
+    const modal = document.getElementById('quick-add-modal');
+    const backdrop = document.getElementById('quick-add-backdrop');
+    if (modal && backdrop) {
+        modal.classList.remove('active');
+        backdrop.classList.remove('active');
+        modal.style.display = 'none';
+        backdrop.style.display = 'none';
+    }
+}
+
+function filterQuickAddTypes(query) {
+    const q = (query || '').trim().toLowerCase();
+    const btns = document.querySelectorAll('#quick-add-grid .quick-add-btn');
+    btns.forEach(btn => {
+        const text = (btn.textContent || '').toLowerCase();
+        const kw = (btn.dataset.kw || '').toLowerCase();
+        const match = (!q || text.includes(q) || kw.includes(q));
+        btn.style.display = match ? 'flex' : 'none';
+    });
+}
+
+function addFieldFromQuick(type) {
+    closeQuickAddModal();
+    addField(type);
+}
+
+// ─── In-Place Insert Dividers ───
+function toggleInsertPopup(idx, event) {
+    if (event) event.stopPropagation();
+    const popup = document.getElementById(`insert-popup-${idx}`);
+    if (!popup) return;
+
+    const isVisible = popup.style.display === 'block';
+    closeAllInsertPopups();
+
+    if (!isVisible) {
+        popup.style.display = 'block';
+    }
+}
+
+function closeAllInsertPopups() {
+    document.querySelectorAll('.insert-popup-menu').forEach(p => p.style.display = 'none');
+}
+
+function insertFieldAt(insertIdx, type) {
+    closeAllInsertPopups();
+
+    const order = fields.length + 1;
+    const defaultLabels = {
+        text: 'Nama Lengkap', textarea: 'Keterangan Tambahan', number: 'Nomor Induk / NISN',
+        email: 'Alamat Email', phone: 'Nomor Telepon / WhatsApp', dropdown: 'Pilihan Kategori',
+        radio: 'Pilihan Jawaban', checkbox: 'Pilihan Minat', date: 'Tanggal Lahir / Kegiatan',
+        time: 'Waktu Pelaksanaan', signature: 'Tanda Tangan Digital', file: 'Unggah Berkas',
+        image: 'Unggah Pas Foto', heading: 'Informasi Baru', description: 'Silakan isi data dengan benar.'
+    };
+
+    const label = defaultLabels[type] || 'Pertanyaan Baru';
+    const fieldName = type + '_' + order;
+
+    const newField = {
+        id: null,
+        field_type: type,
+        field_name: fieldName,
+        label: label,
+        placeholder: 'Masukkan ' + label.toLowerCase(),
+        description: '',
+        is_required: (type !== 'heading' && type !== 'description'),
+        options: ['Pilihan 1', 'Pilihan 2', 'Pilihan 3'],
+        settings: {
+            conditional_logic: {
+                enabled: false,
+                action: 'show',
+                target_field: '',
+                operator: 'equals',
+                value: 'Ya'
+            }
+        },
+    };
+
+    fields.splice(insertIdx, 0, newField);
+    selectedIndex = insertIdx;
+    renderCanvas();
+
+    setTimeout(() => {
+        jumpToQuestion(insertIdx);
+    }, 50);
+
+    showToast('success', `Pertanyaan '${label}' berhasil disisipkan!`);
+}
+
 // ─── Direct In-Card Handlers ───
 function handleDirectLabelInput(idx, value) {
     if (!fields[idx]) return;
@@ -1485,7 +2312,7 @@ function addField(type) {
         email: 'Alamat Email', phone: 'Nomor Telepon / WhatsApp', dropdown: 'Pilihan Kategori',
         radio: 'Pilihan Jawaban', checkbox: 'Pilihan Minat', date: 'Tanggal Lahir / Kegiatan',
         time: 'Waktu Pelaksanaan', signature: 'Tanda Tangan Digital', file: 'Unggah Berkas',
-        image: 'Unggah Pas Foto', heading: 'Informasi Pribadi', description: 'Silakan isi data dengan benar.'
+        image: 'Unggah Pas Foto', heading: 'Informasi Baru', description: 'Silakan isi data dengan benar.'
     };
 
     const label = defaultLabels[type] || 'Pertanyaan Baru';
@@ -1514,16 +2341,9 @@ function addField(type) {
     selectedIndex = fields.length - 1;
     renderCanvas();
     
-    // Auto-focus the newly added question input
+    // Auto-focus and scroll to the newly added question input
     setTimeout(() => {
-        const newCard = document.getElementById(`field-card-${selectedIndex}`);
-        if (newCard) {
-            const input = newCard.querySelector('.inline-field-title, .inline-field-desc');
-            if (input) {
-                input.focus();
-                input.select();
-            }
-        }
+        jumpToQuestion(selectedIndex);
     }, 50);
 
     if (window.innerWidth <= 992) {
@@ -1597,6 +2417,7 @@ async function saveBuilder() {
                 template_id: selectedTemplateId,
                 fields: fields,
                 mappings: mappings,
+                theme: formTheme,
             }),
         });
 
@@ -1605,7 +2426,7 @@ async function saveBuilder() {
                 const shareInput = document.getElementById('share-url-input');
                 if (shareInput) shareInput.value = res.data.public_url;
             }
-            showToast('success', 'Formulir & Hubungan Template Word berhasil disimpan!');
+            showToast('success', 'Formulir, Tema & Background berhasil disimpan!');
         }
     } catch (e) {
         showToast('error', e.message || 'Gagal menyimpan formulir.');
@@ -1669,8 +2490,146 @@ async function copyShareUrl() {
     if (copied) {
         showToast('success', 'Link formulir berhasil disalin ke clipboard!');
     } else {
-        // Fallback prompt
         window.prompt('Silakan salin link formulir secara manual:', text);
+    }
+}
+
+// ─── Background & Theme Customization Functions ───
+function updateMockupPreview() {
+    const frame = document.getElementById('mockup-frame');
+    const overlay = document.getElementById('mockup-overlay');
+    const activeRow = document.getElementById('bg-active-preview-row');
+    const badge = document.getElementById('bg-active-badge');
+    const thumb = document.getElementById('bg-thumbnail-preview');
+    const filenameLabel = document.getElementById('bg-filename-label');
+    const mockupTitle = document.getElementById('mockup-title');
+    const formTitleInput = document.getElementById('form-title-input');
+
+    if (mockupTitle && formTitleInput) {
+        mockupTitle.textContent = formTitleInput.value || 'Formulir Online';
+    }
+
+    if (!frame) return;
+
+    if (formTheme.bg_type === 'image' && formTheme.bg_image) {
+        const fullImgUrl = formTheme.bg_image.startsWith('http') ? formTheme.bg_image : '<?= url('') ?>/' + formTheme.bg_image.replace(/^\//, '');
+        frame.style.backgroundImage = `url('${fullImgUrl}')`;
+        frame.style.backgroundColor = '#0f172a';
+        if (activeRow) activeRow.style.display = 'flex';
+        if (thumb) thumb.src = fullImgUrl;
+        if (filenameLabel) filenameLabel.textContent = formTheme.bg_image.split('/').pop() || 'background.jpg';
+        if (badge) {
+            badge.textContent = 'Foto Aktif';
+            badge.className = 'badge badge-success';
+        }
+    } else {
+        if (activeRow) activeRow.style.display = 'none';
+        if (badge) {
+            badge.textContent = (formTheme.bg_preset && formTheme.bg_preset !== 'default') ? 'Preset Aktif' : 'Default';
+            badge.className = 'badge badge-primary';
+        }
+
+        if (formTheme.bg_preset === 'mesh-indigo') {
+            frame.style.backgroundImage = 'linear-gradient(135deg, #eef2ff, #fae8ff)';
+        } else if (formTheme.bg_preset === 'mesh-sunset') {
+            frame.style.backgroundImage = 'linear-gradient(135deg, #fff7ed, #fee2e2)';
+        } else if (formTheme.bg_preset === 'mesh-emerald') {
+            frame.style.backgroundImage = 'linear-gradient(135deg, #f0fdf4, #e0f2fe)';
+        } else if (formTheme.bg_preset === 'mesh-dark') {
+            frame.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #1e293b)';
+        } else if (formTheme.bg_preset === 'dots-clean') {
+            frame.style.backgroundColor = '#f8fafc';
+            frame.style.backgroundImage = 'radial-gradient(#cbd5e1 1.2px, transparent 1.2px)';
+            frame.style.backgroundSize = '14px 14px';
+        } else {
+            frame.style.backgroundImage = 'none';
+            frame.style.backgroundColor = '#f8fafc';
+        }
+    }
+
+    // Overlay
+    if (overlay) {
+        overlay.className = 'mockup-overlay-layer mockup-overlay-' + (formTheme.bg_overlay || 'light');
+    }
+
+    // Update radio inputs
+    const overlayRadio = document.querySelector(`input[name="theme_bg_overlay"][value="${formTheme.bg_overlay || 'light'}"]`);
+    if (overlayRadio) overlayRadio.checked = true;
+
+    // Update preset cards
+    document.querySelectorAll('.theme-preset-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.preset === (formTheme.bg_preset || 'default'));
+    });
+}
+
+function selectThemePreset(preset) {
+    formTheme.bg_preset = preset;
+    formTheme.bg_type = 'preset';
+    updateMockupPreview();
+}
+
+function updateThemeProp(prop, val) {
+    formTheme[prop] = val;
+    updateMockupPreview();
+}
+
+async function handleBackgroundUpload(file) {
+    if (!file) return;
+
+    const idleState = document.getElementById('bg-upload-idle-state');
+    const loadingState = document.getElementById('bg-upload-loading-state');
+    if (idleState) idleState.style.display = 'none';
+    if (loadingState) loadingState.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('background_image', file);
+
+    try {
+        const res = await fetch('<?= url("forms/{$form->id}/upload-bg") ?>', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const json = await res.json();
+
+        if (json.success && json.data) {
+            formTheme.bg_image = json.data.image_path;
+            formTheme.bg_type = 'image';
+            showToast('success', 'Background foto berhasil diunggah!');
+            updateMockupPreview();
+        } else {
+            showToast('error', json.message || 'Gagal mengunggah background.');
+        }
+    } catch (err) {
+        showToast('error', err.message || 'Terjadi kesalahan jaringan.');
+    } finally {
+        if (idleState) idleState.style.display = 'block';
+        if (loadingState) loadingState.style.display = 'none';
+    }
+}
+
+async function handleBackgroundDelete() {
+    if (!confirm('Apakah Anda yakin ingin menghapus gambar background formulir ini?')) return;
+
+    try {
+        const res = await fetch('<?= url("forms/{$form->id}/delete-bg") ?>', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const json = await res.json();
+        if (json.success) {
+            formTheme.bg_image = '';
+            formTheme.bg_type = 'default';
+            formTheme.bg_preset = 'default';
+            showToast('info', 'Background foto telah dihapus.');
+            updateMockupPreview();
+        }
+    } catch (err) {
+        showToast('error', 'Gagal menghapus background.');
     }
 }
 

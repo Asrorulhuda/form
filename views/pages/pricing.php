@@ -1,8 +1,10 @@
 <section class="page-hero">
     <div class="container">
-        <h1 class="page-hero-title"><?= e($pageTitle ?? 'Paket & Harga') ?></h1>
+        <h1 class="page-hero-title"><?= e($pageTitle ?? 'Paket & Layanan') ?></h1>
         <?php if (!empty($pageSubtitle)): ?>
             <p class="page-hero-subtitle"><?= e($pageSubtitle) ?></p>
+        <?php else: ?>
+            <p class="page-hero-subtitle">Pilihan fleksibel sesuai skala kebutuhan administrasi, mulai dari penggunaan mandiri hingga instansi skala besar.</p>
         <?php endif; ?>
     </div>
 </section>
@@ -14,7 +16,7 @@
                 <?php foreach ($pricingItems as $plan): ?>
                     <div class="pricing-card <?= !empty($plan['highlighted']) ? 'pricing-highlighted' : '' ?>">
                         <?php if (!empty($plan['highlighted'])): ?>
-                            <div class="pricing-badge">Populer</div>
+                            <div class="pricing-badge">Paling Diminati</div>
                         <?php endif; ?>
 
                         <h3 class="pricing-name"><?= e($plan['name'] ?? '') ?></h3>
@@ -51,7 +53,7 @@
             </div>
         <?php else: ?>
             <div class="text-center" style="padding: 60px 0; color: var(--text-muted);">
-                <p>Informasi harga belum tersedia.</p>
+                <p>Informasi paket layanan sedang disiapkan.</p>
             </div>
         <?php endif; ?>
     </div>

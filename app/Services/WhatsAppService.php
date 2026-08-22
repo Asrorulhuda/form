@@ -179,24 +179,163 @@ class WhatsAppService
     }
 
     /**
-     * Execute HTTP POST JSON request to Gateway
+     * Send notification to both User and Admin simultaneously in parallel (Ultra-Fast)
+     * Total wait time equals 1 single request instead of 2 sequential requests.
+     */
+    public function notifyBoth(?string $userPhone, ?string $userMessage, ?string $adminMessage): array
+    {
+        if (!$this->isEnabled()) {
+            return ['success' => false, 'message' => 'WhatsApp Gateway nonaktif.'];
+        }
+
+        $tasks = [];
+
+        if (!empty($userPhone) && !empty($userMessage)) {
+            $tasks[] = [
+                'recipient' => $userPhone,
+                'message'   => $userMessage,
+            ];
+        }
+
+        $adminNum = $this->getAdminNumber();
+        if (!empty($adminNum) && !empty($adminMessage)) {
+            $tasks[] = [
+                'recipient' => $adminNum,
+                'message'   => $adminMessage,
+            ];
+        }
+
+        if (empty($tasks)) {
+            return ['success' => true, 'message' => 'Tidak ada pesan yang dikirim.'];
+        }
+
+        return $this->sendBatch($tasks);
+    }
+
+    /**
+     * Send multiple messages in parallel using curl_multi for near-instant dispatch
+     * 
+     * @param array $messages Array of ['recipient' => string, 'message' => string, 'footer' => ?string]
+     * @return array
+     */
+    public function sendBatch(array $messages): array
+    {
+        $apiKey = $this->getApiKey();
+        $sender = $this->getSender();
+
+        if (empty($apiKey) || empty($sender)) {
+            return ['success' => false, 'message' => 'API Key / Sender belum dikonfigurasi.'];
+        }
+
+        if (empty($messages)) {
+            return ['success' => true, 'message' => 'Batch kosong.'];
+        }
+
+        $mh = curl_multi_init();
+        $handles = [];
+
+        foreach ($messages as $idx => $item) {
+            $recip = $this->formatNumber($item['recipient'] ?? '');
+            $msg   = $item['message'] ?? '';
+            if (empty($recip) || empty($msg)) {
+                continue;
+            }
+
+            $payload = json_encode([
+                'api_key' => $apiKey,
+                'sender'  => $sender,
+                'number'  => $recip,
+                'message' => $msg,
+                'footer'  => $item['footer'] ?? $this->getFooter(),
+                'full'    => 1,
+            ]);
+
+            $ch = curl_init($this->endpointMessage);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($payload),
+                    'Accept: application/json',
+                ],
+                CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
+                CURLOPT_TCP_NODELAY    => 1,
+                CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_TIMEOUT        => 4,
+                CURLOPT_NOSIGNAL       => 1,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            ]);
+
+            curl_multi_add_handle($mh, $ch);
+            $handles[$idx] = $ch;
+        }
+
+        if (empty($handles)) {
+            curl_multi_close($mh);
+            return ['success' => false, 'message' => 'Tidak ada penerima valid.'];
+        }
+
+        // Execute all requests concurrently
+        $running = null;
+        do {
+            $status = curl_multi_exec($mh, $running);
+            if ($running > 0) {
+                curl_multi_select($mh, 0.05);
+            }
+        } while ($running > 0 && $status === CURLM_OK);
+
+        $results = [];
+        foreach ($handles as $idx => $ch) {
+            $res = curl_multi_getcontent($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $results[$idx] = [
+                'code'    => $code,
+                'success' => ($code >= 200 && $code < 300),
+                'data'    => json_decode($res, true) ?: $res,
+            ];
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+        }
+
+        curl_multi_close($mh);
+
+        return [
+            'success' => true,
+            'message' => count($results) . ' pesan dikirim secara paralel.',
+            'batch'   => $results,
+        ];
+    }
+
+    /**
+     * Execute HTTP POST JSON request to Gateway with optimized low-latency settings
      */
     private function sendRequest(string $url, array $data): array
     {
         $jsonData = json_encode($data);
 
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($jsonData),
-            'Accept: application/json',
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $jsonData,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData),
+                'Accept: application/json',
+            ],
+            CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
+            CURLOPT_TCP_NODELAY    => 1,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT        => 4,
+            CURLOPT_NOSIGNAL       => 1,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $result = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

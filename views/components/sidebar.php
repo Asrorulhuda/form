@@ -78,7 +78,7 @@ function isActive($currentUrl, $url) {
 <aside class="sidebar">
     <!-- Header -->
     <div class="sidebar-header">
-        <div class="sidebar-logo">A</div>
+        <img src="<?= asset('img/logo-icon.svg') ?>" alt="ASR FORM Logo" width="36" height="36" style="border-radius: 10px; display: block;">
         <div>
             <span class="sidebar-brand">ASR FORM</span>
             <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; margin-top: -2px;">

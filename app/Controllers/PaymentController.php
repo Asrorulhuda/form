@@ -121,12 +121,12 @@ class PaymentController
         }
 
         // Upload folder
-        $uploadDir = BASE_PATH . '/uploads/payments';
+        $uploadDir = BASE_PATH . '/public/uploads/payments';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $filename = 'proof_' . $userId . '_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $ext;
         $destPath = $uploadDir . '/' . $filename;
 
@@ -155,7 +155,7 @@ class PaymentController
 
         AuditLog::log('payment', 'payments', (int)$paymentId, "User {$user->name} mengunggah bukti pembayaran paket {$user->plan}");
 
-        // ─── Trigger WhatsApp Gateway Notification to Admin ───
+        // ─── Trigger WhatsApp Gateway Notification (Parallel Dispatch) ───
         $wa = WhatsAppService::getInstance();
         $siteName = $this->settingModel->get('site_name', 'ASR FORM');
         
@@ -166,17 +166,14 @@ class PaymentController
                     . "💳 *Metode:* " . strtoupper($method) . "\n"
                     . "📱 *No. WhatsApp:* {$senderPhone}\n"
                     . "📅 *Waktu:* " . date('d/m/Y H:i') . " WIB\n\n"
-                    . "Silakan periksa dan verifikasi pembayaran di dashboard admin:";
-        $wa->notifyAdmin($adminWaMsg);
+                    . "Silakan periksa dan verifikasi pembayaran di dashboard admin:\n" . url('admin/payments');
 
-        // ─── Trigger WhatsApp Gateway Notification to User ───
-        if (!empty($senderPhone)) {
-            $userWaMsg = "Halo *{$user->name}*,\n\n"
-                       . "Terima kasih! Bukti pembayaran untuk paket *{$user->plan}* di *{$siteName}* telah kami terima.\n\n"
-                       . "Status: ⏳ *Menunggu Verifikasi Admin*\n"
-                       . "Kami akan segera memverifikasi pembayaran Anda dan mengaktifkan akun Anda secepatnya.";
-            $wa->notifyUser($senderPhone, $userWaMsg);
-        }
+        $userWaMsg = "Halo *{$user->name}*,\n\n"
+                   . "Terima kasih! Bukti pembayaran untuk paket *{$user->plan}* di *{$siteName}* telah kami terima.\n\n"
+                   . "Status: ⏳ *Menunggu Verifikasi Admin*\n"
+                   . "Kami akan segera memverifikasi pembayaran Anda dan mengaktifkan akun Anda secepatnya.";
+
+        $wa->notifyBoth($senderPhone, $userWaMsg, $adminWaMsg);
 
         // ─── Trigger Gmail SMTP Gateway Notification to Admin ───
         $mail = MailService::getInstance();
