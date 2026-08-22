@@ -324,17 +324,55 @@ $publicUrl = url("form/{$form->slug}");
 </div>
 
 <style>
+/* ─── Prevent parent transform from breaking sticky ─── */
+.main-content {
+    animation: none !important;
+    transform: none !important;
+}
+
 /* ─── 2-Column Builder Grid ─── */
 .builder-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
+    grid-template-columns: 285px 1fr;
+    gap: 24px;
     align-items: start;
 }
 
 .builder-palette-panel {
-    position: sticky;
-    top: 20px;
+    position: sticky !important;
+    top: 85px !important;
+    z-index: 30;
+    max-height: calc(100vh - 105px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.builder-palette-body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.builder-palette-body::-webkit-scrollbar {
+    width: 5px;
+}
+.builder-palette-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.builder-palette-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+.builder-palette-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* ─── Builder Mobile Navigation Bar ─── */
