@@ -58,14 +58,52 @@ class PublicFormController
     }
 
     /**
+     * Generate a cryptographic token specific to this public form and current time window.
+     * Prevents public submission lockouts caused by strict session timeouts / cookie drops.
+     */
+    public static function generateFormToken(object $form): string
+    {
+        $secret = env('APP_KEY', 'asr_form_public_token_secret_salt_2026');
+        $date = date('Y-m-d');
+        return hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$date}", $secret);
+    }
+
+    /**
+     * Validate the public form token (checks today and yesterday for timezone/midnight safety).
+     */
+    public static function validateFormToken(object $form, string $token): bool
+    {
+        if (empty($token)) {
+            return false;
+        }
+        $secret = env('APP_KEY', 'asr_form_public_token_secret_salt_2026');
+        $today = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+        $expectedToday = hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$today}", $secret);
+        $expectedYesterday = hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$yesterday}", $secret);
+
+        return hash_equals($expectedToday, $token) || hash_equals($expectedYesterday, $token);
+    }
+
+    /**
      * Handle public form submission (No login required) & Auto-generate Document
      */
     public function submit(string $slug): void
     {
-        CSRF::check();
-
         $form = $this->db->fetch("SELECT * FROM forms WHERE slug = ?", [$slug]);
         if (!$form || $form->status === 'closed') {
+            Response::redirect(url("form/{$slug}"));
+            return;
+        }
+
+        // Validate session CSRF or fallback Public Form Token
+        $isCsrfValid = CSRF::validate();
+        $isTokenValid = self::validateFormToken($form, $_POST['_form_token'] ?? '');
+
+        if (!$isCsrfValid && !$isTokenValid) {
+            Session::setOld($_POST);
+            Session::flash('error', 'Sesi formulir telah kedaluwarsa. Jawaban Anda telah dipulihkan, silakan periksa dan klik "Kirim Formulir" kembali.');
             Response::redirect(url("form/{$slug}"));
             return;
         }

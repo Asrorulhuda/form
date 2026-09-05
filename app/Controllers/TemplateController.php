@@ -123,7 +123,7 @@ class TemplateController
             return;
         }
 
-        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
             return;
         }
@@ -284,7 +284,7 @@ class TemplateController
             return;
         }
 
-        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
             return;
         }
@@ -565,7 +565,7 @@ class TemplateController
             return;
         }
 
-        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
             return;
         }
@@ -607,7 +607,7 @@ class TemplateController
             return;
         }
 
-        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
             return;
         }
@@ -860,7 +860,7 @@ class TemplateController
         $template = $this->db->fetch("SELECT * FROM document_templates WHERE id = ?", [$templateId]);
 
         if ($template) {
-            if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+            if ($template->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
                 Response::redirectWith(url('templates'), 'error', 'Akses ditolak.');
                 return;
             }

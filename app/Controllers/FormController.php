@@ -218,7 +218,7 @@ class FormController
             return;
         }
 
-        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::error('Akses ditolak.', null, 403);
             return;
         }
@@ -330,7 +330,7 @@ class FormController
             return;
         }
 
-        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::error('Akses ditolak.', null, 403);
             return;
         }
@@ -405,7 +405,7 @@ class FormController
             return;
         }
 
-        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin')) {
+        if ($form->user_id !== Auth::id() && !Auth::hasRole('Super Admin', 'Admin')) {
             Response::error('Akses ditolak.', null, 403);
             return;
         }

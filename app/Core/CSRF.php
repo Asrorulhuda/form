@@ -51,7 +51,30 @@ class CSRF
     {
         if (!self::validate()) {
             http_response_code(403);
-            die('CSRF token validation failed.');
+
+            $isAjax = (
+                (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') ||
+                str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')
+            );
+
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Token keamanan (CSRF) kedaluwarsa atau tidak valid. Silakan muat ulang halaman.',
+                ]);
+                exit;
+            }
+
+            if (!empty($_SERVER['HTTP_REFERER'])) {
+                Session::flash('error', 'Sesi keamanan formulir Anda telah berakhir. Silakan muat ulang halaman dan coba lagi.');
+                header('Location: ' . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
+
+            echo "<!DOCTYPE html><html lang='id'><head><meta charset='UTF-8'><title>403 - Akses Ditolak</title><style>body{font-family:sans-serif;background:#f8fafc;color:#1e293b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#fff;padding:32px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);max-width:480px;text-align:center;}h1{color:#ef4444;font-size:20px;margin-top:0;}p{color:#64748b;font-size:14px;line-height:1.6;}.btn{display:inline-block;margin-top:16px;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;}</style></head><body><div class='card'><h1>Sesi Keamanan Kedaluwarsa (403)</h1><p>Token keamanan (CSRF) tidak valid atau sesi Anda telah kedaluwarsa karena terlalu lama tidak aktif.</p><a href='javascript:history.back()' class='btn'>Kembali & Muat Ulang</a></div></body></html>";
+            exit;
         }
     }
 

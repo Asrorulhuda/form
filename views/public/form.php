@@ -723,9 +723,19 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
             </div>
         <?php endif; ?>
 
+        <?php if ($flashError = \App\Core\Session::getFlash('error')): ?>
+            <div class="card mb-4" style="background: #fef2f2; border: 1px solid #fca5a5; padding: 16px 20px; border-radius: 14px;">
+                <div class="flex items-center gap-2" style="color: #b91c1c; font-weight: 700; font-size: 14px;">
+                    <span>⚠️</span>
+                    <span><?= e($flashError) ?></span>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- ─── Dynamic Multi-Section Form ─── -->
         <form method="POST" action="<?= url("form/{$form->slug}/submit") ?>" enctype="multipart/form-data" id="public-form">
             <?= CSRF::field() ?>
+            <input type="hidden" name="_form_token" value="<?= \App\Controllers\PublicFormController::generateFormToken($form) ?>">
 
             <?php foreach ($sections as $secIndex => $sec): ?>
                 <div class="form-step-pane" id="step-pane-<?= $secIndex ?>" data-step-index="<?= $secIndex ?>" data-step-title="<?= e($sec['title']) ?>" style="<?= $secIndex === 0 ? '' : 'display: none;' ?>">
