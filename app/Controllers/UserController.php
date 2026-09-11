@@ -43,14 +43,17 @@ class UserController
             $result = $this->userModel->getAll(Auth::adminId(), $filters, $page);
         }
 
+        $roles = \App\Core\Database::getInstance()->fetchAll("SELECT * FROM roles ORDER BY id ASC");
+
         View::page('users.index', [
             'title'     => 'Kelola User',
-            'pageTitle' => 'Kelola User',
+            'pageTitle' => Auth::isSuperAdmin() ? 'Semua User' : 'Kelola User',
             'users'     => $result['data'],
             'total'     => $result['total'],
             'page'      => $result['page'],
             'lastPage'  => $result['lastPage'],
             'filters'   => $filters,
+            'roles'     => $roles,
         ]);
     }
 
@@ -120,10 +123,13 @@ class UserController
             return;
         }
 
+        $roles = \App\Core\Database::getInstance()->fetchAll("SELECT * FROM roles ORDER BY id ASC");
+
         View::page('users.edit', [
             'title'     => 'Edit User',
             'pageTitle' => 'Edit User',
             'user'      => $user,
+            'roles'     => $roles,
         ]);
     }
 
@@ -172,10 +178,89 @@ class UserController
             return;
         }
 
+        // Check if Super Admin requested to promote this user to Admin (role_id = 2)
+        $targetRoleId = (int) ($_POST['role_id'] ?? 3);
+        if (Auth::isSuperAdmin() && $targetRoleId === 2) {
+            $this->promoteUserToAdmin($userId, $targetRoleId, $data);
+            return;
+        }
+
         $this->userModel->update($userId, $data);
         AuditLog::log('update', 'users', $userId, "Admin mengubah user: {$data['name']}");
 
         Response::redirectWith(url('users'), 'success', 'User berhasil diperbarui.');
+    }
+
+    /**
+     * Quick change role from User to Admin (Super Admin only)
+     */
+    public function changeRole(string $id): void
+    {
+        CSRF::check();
+
+        if (!Auth::isSuperAdmin()) {
+            Response::redirectWith(url('users'), 'error', 'Hanya Super Admin yang dapat mengubah role pengguna.');
+            return;
+        }
+
+        $targetRoleId = (int) ($_POST['role_id'] ?? 2);
+        $this->promoteUserToAdmin((int) $id, $targetRoleId);
+    }
+
+    /**
+     * Promote a user to Admin in the `admins` table
+     */
+    private function promoteUserToAdmin(int $userId, int $targetRoleId, array $updatedData = []): void
+    {
+        $user = $this->userModel->find($userId);
+        if (!$user) {
+            Response::redirectWith(url('users'), 'error', 'Pengguna tidak ditemukan.');
+            return;
+        }
+
+        $targetEmail = !empty($updatedData['email']) ? $updatedData['email'] : $user->email;
+        $targetName  = !empty($updatedData['name']) ? $updatedData['name'] : $user->name;
+        $targetPhone = isset($updatedData['phone']) ? $updatedData['phone'] : ($user->phone ?? '');
+        $targetStatus = !empty($updatedData['status']) ? $updatedData['status'] : ($user->status ?? 'active');
+
+        // Check if an admin with the same email already exists
+        $adminModel = new \App\Models\Admin();
+        $existingAdmin = $adminModel->findByEmail($targetEmail);
+        if ($existingAdmin) {
+            Response::redirectWith(url('users'), 'error', "Email '{$targetEmail}' sudah terdaftar sebagai Admin di sistem.");
+            return;
+        }
+
+        // Determine password hash
+        $passwordHash = !empty($updatedData['password'])
+            ? password_hash($updatedData['password'], PASSWORD_DEFAULT)
+            : $user->password;
+
+        $db = \App\Core\Database::getInstance();
+
+        // 1. Insert into admins table
+        $newAdminId = $db->insert('admins', [
+            'name'       => $targetName,
+            'email'      => $targetEmail,
+            'phone'      => $targetPhone,
+            'password'   => $passwordHash,
+            'role_id'    => 2, // Admin
+            'status'     => $targetStatus,
+            'plan'       => 'Gratis',
+            'created_at' => $user->created_at ?? date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        // 2. Remove user from users table (Multi-SaaS role separation)
+        $this->userModel->delete($userId);
+
+        AuditLog::log('promote', 'users', (int)$newAdminId, "Super Admin mengubah role pengguna '{$targetName}' ({$targetEmail}) dari User menjadi Admin");
+
+        Response::redirectWith(
+            url('admins'), 
+            'success', 
+            "Berhasil mengubah role '{$targetName}' menjadi Admin! Akun kini terdaftar sebagai Admin tenant mandiri."
+        );
     }
 
     /**

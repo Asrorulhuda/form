@@ -101,6 +101,7 @@ $router->post('users/store', 'UserController', 'store', ['AuthMiddleware', 'Role
 $router->get('users/{id}/edit', 'UserController', 'edit', ['AuthMiddleware', 'RoleMiddleware']);
 $router->post('users/{id}/update', 'UserController', 'update', ['AuthMiddleware', 'RoleMiddleware']);
 $router->post('users/{id}/delete', 'UserController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('users/{id}/change-role', 'UserController', 'changeRole', ['AuthMiddleware', 'SuperAdminMiddleware']);
 
 // Tenant WhatsApp Gateway Settings (Admin + Super Admin)
 $router->get('settings/wa', 'AdminController', 'waSettings', ['AuthMiddleware', 'RoleMiddleware']);

@@ -48,6 +48,25 @@ $errors = Session::getFlash('errors') ?? [];
                     </div>
                 </div>
 
+                <?php if (\App\Core\Auth::isSuperAdmin()): ?>
+                    <div class="form-group mb-3" style="background: #fffbeb; border: 1px solid #fde68a; padding: 14px; border-radius: 8px;">
+                        <label class="form-label" for="role_id" style="color: #92400e; font-weight: 700;">
+                            👑 Peran (Role) Pengguna
+                        </label>
+                        <select id="role_id" name="role_id" class="form-control" style="border-color: #fcd34d; font-weight: 600;">
+                            <option value="3" <?= (int)Session::old('role_id', $user->role_id ?? 3) === 3 ? 'selected' : '' ?>>
+                                👤 User (Pengguna Biasa di bawah Tenant)
+                            </option>
+                            <option value="2" <?= (int)Session::old('role_id', $user->role_id ?? 3) === 2 ? 'selected' : '' ?>>
+                                👑 Admin (Promosikan Menjadi Admin Tenant Mandiri)
+                            </option>
+                        </select>
+                        <small style="color: #b45309; font-size: 12px; margin-top: 5px; display: block;">
+                            💡 <strong>Catatan Super Admin:</strong> Memilih <em>Admin</em> akan otomatis memindahkan akun ini ke tabel Admin. Pengguna ini akan dapat login sebagai Admin tenant mandiri dan mengelola formulir, template, serta penggunanya sendiri.
+                        </small>
+                    </div>
+                <?php endif; ?>
+
                 <div class="grid-2 mb-3">
                     <div class="form-group">
                         <label class="form-label" for="password">Password Baru</label>

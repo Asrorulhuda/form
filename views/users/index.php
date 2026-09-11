@@ -68,7 +68,7 @@ $pendingApplicantsCount = $isSuperAdmin ? (new Admin())->countPending() : 0;
             </div>
             <select name="role_id" class="form-control" style="width: auto; min-width: 140px;">
                 <option value="">Semua Role</option>
-                <?php foreach ($roles as $role): ?>
+                <?php foreach (($roles ?? []) as $role): ?>
                     <option value="<?= $role->id ?>" <?= ($filters['role_id'] ?? '') == $role->id ? 'selected' : '' ?>>
                         <?= e($role->name) ?>
                     </option>
@@ -142,7 +142,19 @@ $pendingApplicantsCount = $isSuperAdmin ? (new Admin())->countPending() : 0;
                                 </td>
                                 <td><span class="text-sm text-muted"><?= date('d/m/Y', strtotime($u->created_at)) ?></span></td>
                                 <td style="text-align: right;">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex justify-end gap-2 items-center">
+                                        <?php if ($isSuperAdmin): ?>
+                                            <form method="POST" action="<?= url("users/{$u->id}/change-role") ?>" style="display:inline;">
+                                                <?= \App\Core\CSRF::field() ?>
+                                                <input type="hidden" name="role_id" value="2">
+                                                <button type="submit" class="btn btn-sm" 
+                                                        style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700; border-radius: 6px; padding: 4px 9px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;" 
+                                                        onclick="return confirm('Promosikan <?= e($u->name) ?> (<?= e($u->email) ?>) menjadi Admin?\n\nAkun ini akan dipindahkan ke daftar Admin dan dapat mengelola formulir tenant mandiri.')" 
+                                                        title="Promosikan pengguna ini menjadi Admin Tenant">
+                                                    👑 Jadikan Admin
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                         <a href="<?= url("users/{$u->id}/edit") ?>" class="btn btn-secondary btn-sm" style="font-size: 12px;" title="Edit Pengguna">
                                             ✏️ Edit
                                         </a>
