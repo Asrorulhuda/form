@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Controllers\\AdminController' => $baseDir . '/app/Controllers/AdminController.php',
     'App\\Controllers\\AdsController' => $baseDir . '/app/Controllers/AdsController.php',
     'App\\Controllers\\ApplicantController' => $baseDir . '/app/Controllers/ApplicantController.php',
     'App\\Controllers\\AuditLogController' => $baseDir . '/app/Controllers/AuditLogController.php',
@@ -34,7 +35,9 @@ return array(
     'App\\Core\\View' => $baseDir . '/app/Core/View.php',
     'App\\Middleware\\AuthMiddleware' => $baseDir . '/app/Middleware/AuthMiddleware.php',
     'App\\Middleware\\RoleMiddleware' => $baseDir . '/app/Middleware/RoleMiddleware.php',
+    'App\\Middleware\\SuperAdminMiddleware' => $baseDir . '/app/Middleware/SuperAdminMiddleware.php',
     'App\\Models\\AdSlot' => $baseDir . '/app/Models/AdSlot.php',
+    'App\\Models\\Admin' => $baseDir . '/app/Models/Admin.php',
     'App\\Models\\AuditLog' => $baseDir . '/app/Models/AuditLog.php',
     'App\\Models\\Payment' => $baseDir . '/app/Models/Payment.php',
     'App\\Models\\Role' => $baseDir . '/app/Models/Role.php',
@@ -45,6 +48,7 @@ return array(
     'App\\Services\\DocxParser' => $baseDir . '/app/Services/DocxParser.php',
     'App\\Services\\ExcelExportService' => $baseDir . '/app/Services/ExcelExportService.php',
     'App\\Services\\GitHubWebhookService' => $baseDir . '/app/Services/GitHubWebhookService.php',
+    'App\\Services\\HtmlToDocxService' => $baseDir . '/app/Services/HtmlToDocxService.php',
     'App\\Services\\MailService' => $baseDir . '/app/Services/MailService.php',
     'App\\Services\\QrCodeService' => $baseDir . '/app/Services/QrCodeService.php',
     'App\\Services\\WhatsAppService' => $baseDir . '/app/Services/WhatsAppService.php',

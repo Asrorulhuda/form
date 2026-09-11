@@ -13,12 +13,19 @@ class WhatsAppService
     private static ?self $instance = null;
     private Setting $settings;
 
-    private string $endpointMessage = 'https://gateway.asr-desain.my.id/send-message';
-    private string $endpointMedia   = 'https://gateway.asr-desain.my.id/send-media';
+    private string $endpointMessage;
+    private string $endpointMedia;
+
+    // Per-admin overrides (null = use global settings)
+    private ?string $overrideSender = null;
+    private ?string $overrideApiKey = null;
 
     public function __construct()
     {
         $this->settings = new Setting();
+        $gatewayUrl = rtrim($this->settings->get('wa_gateway_url', 'https://gateway.asr-desain.my.id'), '/');
+        $this->endpointMessage = $gatewayUrl . '/send-message';
+        $this->endpointMedia   = $gatewayUrl . '/send-media';
     }
 
     public static function getInstance(): self
@@ -36,12 +43,40 @@ class WhatsAppService
 
     public function getApiKey(): string
     {
+        if ($this->overrideApiKey !== null) {
+            return $this->overrideApiKey;
+        }
         return trim($this->settings->get('wa_api_key', ''));
     }
 
     public function getSender(): string
     {
+        if ($this->overrideSender !== null) {
+            return $this->overrideSender;
+        }
         return trim($this->settings->get('wa_sender', ''));
+    }
+
+    /**
+     * Create a WA service instance configured for a specific admin's sender/API key.
+     * Gateway URL remains global (from settings).
+     */
+    public static function forAdmin(int $adminId): self
+    {
+        $instance = new self();
+        $adminModel = new \App\Models\Admin();
+        $admin = $adminModel->find($adminId);
+        if ($admin) {
+            $sender = trim($admin->wa_sender ?? '');
+            $apiKey = trim($admin->wa_api_key ?? '');
+            if (!empty($sender)) {
+                $instance->overrideSender = $sender;
+            }
+            if (!empty($apiKey)) {
+                $instance->overrideApiKey = $apiKey;
+            }
+        }
+        return $instance;
     }
 
     public function getAdminNumber(): string

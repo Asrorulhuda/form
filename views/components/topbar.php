@@ -44,6 +44,12 @@ $initials = $user ? strtoupper(substr($user->name, 0, 1)) : 'U';
                     </svg>
                     Pengaturan
                 </a>
+                <?php if (\App\Core\Auth::isImpersonating()): ?>
+                    <a href="<?= url('admins/leave-impersonate') ?>" class="dropdown-item" style="color: #b45309; font-weight: 700;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                        Kembali ke Super Admin
+                    </a>
+                <?php endif; ?>
                 <div class="dropdown-divider"></div>
                 <a href="<?= url('logout') ?>" class="dropdown-item danger">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">

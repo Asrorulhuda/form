@@ -20,6 +20,23 @@ $currentUrl = trim($_GET['url'] ?? '', '/');
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
+    <?php if (Auth::isImpersonating()): ?>
+        <div class="impersonation-bar" style="background: linear-gradient(135deg, #b45309, #d97706); color: #ffffff; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; position: sticky; top: 0; z-index: 10000; box-shadow: 0 4px 12px rgba(180, 83, 9, 0.3);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">🛡️</span>
+                <span>
+                    Anda sedang login sebagai Admin: <strong><?= e(Auth::name()) ?></strong> 
+                    <span style="opacity: 0.85; font-size: 12px; margin-left: 4px;">(Akun Asli: <?= e(Auth::impersonatorName()) ?>)</span>
+                </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="<?= url('admins/leave-impersonate') ?>" class="btn btn-sm" style="background: #ffffff; color: #b45309; font-weight: 800; border: none; border-radius: 6px; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                    Kembali ke Super Admin
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
     <div class="app-layout">
         <!-- Sidebar -->
         <?php View::component('sidebar', ['currentUrl' => $currentUrl, 'user' => $user]); ?>

@@ -22,16 +22,23 @@ class AuditLog
      */
     public static function log(string $action, string $module, ?int $recordId = null, string $description = ''): void
     {
-        $db = Database::getInstance();
-        $db->insert('audit_logs', [
-            'user_id'     => Auth::id(),
-            'action'      => $action,
-            'module'      => $module,
-            'record_id'   => $recordId,
-            'description' => $description,
-            'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
-            'created_at'  => date('Y-m-d H:i:s'),
-        ]);
+        try {
+            $db = Database::getInstance();
+            $db->insert('audit_logs', [
+                'user_id'     => Auth::id(),
+                'user_type'   => Auth::userType(),
+                'user_name'   => Auth::name(),
+                'action'      => $action,
+                'module'      => $module,
+                'record_id'   => $recordId,
+                'description' => $description,
+                'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            // Defensive: Audit log failure should never crash application flow
+            error_log('[AuditLog Error] ' . $e->getMessage());
+        }
     }
 
     /**
@@ -43,9 +50,9 @@ class AuditLog
         $params = [];
 
         if (!empty($filters['search'])) {
-            $where .= " AND (a.description LIKE ? OR a.action LIKE ? OR a.module LIKE ?)";
+            $where .= " AND (a.description LIKE ? OR a.action LIKE ? OR a.module LIKE ? OR a.user_name LIKE ?)";
             $search = '%' . $filters['search'] . '%';
-            $params = array_merge($params, [$search, $search, $search]);
+            $params = array_merge($params, [$search, $search, $search, $search]);
         }
 
         if (!empty($filters['module'])) {
@@ -65,8 +72,9 @@ class AuditLog
 
         $offset = ($page - 1) * $perPage;
         $logs = $this->db->fetchAll(
-            "SELECT a.*, u.name as user_name 
+            "SELECT a.*, COALESCE(a.user_name, adm.name, u.name, 'System') as user_name 
              FROM audit_logs a 
+             LEFT JOIN admins adm ON a.user_id = adm.id
              LEFT JOIN users u ON a.user_id = u.id 
              WHERE {$where} 
              ORDER BY a.created_at DESC 
@@ -89,8 +97,9 @@ class AuditLog
     public function getRecent(int $limit = 10): array
     {
         return $this->db->fetchAll(
-            "SELECT a.*, u.name as user_name 
+            "SELECT a.*, COALESCE(a.user_name, adm.name, u.name, 'System') as user_name 
              FROM audit_logs a 
+             LEFT JOIN admins adm ON a.user_id = adm.id
              LEFT JOIN users u ON a.user_id = u.id 
              ORDER BY a.created_at DESC 
              LIMIT ?",

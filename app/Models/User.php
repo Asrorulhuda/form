@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Core\Database;
 
 /**
- * User Model
+ * User Model — End-User (belongs to an Admin tenant)
  */
 class User
 {
@@ -14,42 +14,21 @@ class User
     public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->ensurePhoneColumn();
     }
 
     /**
-     * Ensure phone column exists in users table
+     * Get all users for a specific admin (tenant-scoped) with optional filters
      */
-    private function ensurePhoneColumn(): void
+    public function getAll(int $adminId, array $filters = [], int $page = 1, int $perPage = 15): array
     {
-        try {
-            $cols = $this->db->fetchAll("SHOW COLUMNS FROM `users` LIKE 'phone'");
-            if (empty($cols)) {
-                $this->db->query("ALTER TABLE `users` ADD COLUMN `phone` VARCHAR(30) NULL AFTER `email`");
-            }
-        } catch (\Throwable $e) {
-            // Safe fallback
-        }
-    }
-
-    /**
-     * Get all approved users (active/inactive) with role info and optional filters
-     */
-    public function getAll(array $filters = [], int $page = 1, int $perPage = 15): array
-    {
-        $where = "u.status != 'pending'";
-        $params = [];
+        $where = "u.admin_id = ?";
+        $params = [$adminId];
 
         if (!empty($filters['search'])) {
             $where .= " AND (u.name LIKE ? OR u.email LIKE ?)";
             $search = '%' . $filters['search'] . '%';
             $params[] = $search;
             $params[] = $search;
-        }
-
-        if (!empty($filters['role_id'])) {
-            $where .= " AND u.role_id = ?";
-            $params[] = $filters['role_id'];
         }
 
         if (!empty($filters['status'])) {
@@ -85,11 +64,11 @@ class User
     }
 
     /**
-     * Get all pending applicants awaiting approval
+     * Get all users globally (for Super Admin)
      */
-    public function getPendingApplicants(array $filters = [], int $page = 1, int $perPage = 15): array
+    public function getAllGlobal(array $filters = [], int $page = 1, int $perPage = 15): array
     {
-        $where = "u.status = 'pending'";
+        $where = "1=1";
         $params = [];
 
         if (!empty($filters['search'])) {
@@ -99,16 +78,27 @@ class User
             $params[] = $search;
         }
 
+        if (!empty($filters['admin_id'])) {
+            $where .= " AND u.admin_id = ?";
+            $params[] = $filters['admin_id'];
+        }
+
+        if (!empty($filters['status'])) {
+            $where .= " AND u.status = ?";
+            $params[] = $filters['status'];
+        }
+
         $total = (int) $this->db->fetchColumn(
             "SELECT COUNT(*) FROM users u WHERE {$where}",
             $params
         );
 
         $offset = ($page - 1) * $perPage;
-        $applicants = $this->db->fetchAll(
-            "SELECT u.*, r.name as role_name 
+        $users = $this->db->fetchAll(
+            "SELECT u.*, r.name as role_name, a.name as admin_name
              FROM users u 
              JOIN roles r ON u.role_id = r.id 
+             JOIN admins a ON u.admin_id = a.id
              WHERE {$where} 
              ORDER BY u.created_at DESC 
              LIMIT {$perPage} OFFSET {$offset}",
@@ -116,46 +106,12 @@ class User
         );
 
         return [
-            'data'     => $applicants,
+            'data'     => $users,
             'total'    => $total,
             'page'     => $page,
             'perPage'  => $perPage,
             'lastPage' => max(1, ceil($total / $perPage)),
         ];
-    }
-
-    /**
-     * Count pending applicants
-     */
-    public function countPending(): int
-    {
-        return (int) $this->db->fetchColumn("SELECT COUNT(*) FROM users WHERE status = 'pending'");
-    }
-
-    /**
-     * Approve an applicant (ACC)
-     */
-    public function approve(int $id, ?int $roleId = null): int
-    {
-        $data = [
-            'status'     => 'active',
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-        if ($roleId) {
-            $data['role_id'] = $roleId;
-        }
-        return $this->db->update('users', $data, 'id = ?', [$id]);
-    }
-
-    /**
-     * Reject an applicant
-     */
-    public function reject(int $id): int
-    {
-        return $this->db->update('users', [
-            'status'     => 'rejected',
-            'updated_at' => date('Y-m-d H:i:s'),
-        ], 'id = ?', [$id]);
     }
 
     /**
@@ -181,7 +137,7 @@ class User
     }
 
     /**
-     * Create a new user
+     * Create a new user (must include admin_id)
      */
     public function create(array $data): string|false
     {
@@ -217,7 +173,15 @@ class User
     }
 
     /**
-     * Count users
+     * Count users for a specific admin
+     */
+    public function countByAdmin(int $adminId): int
+    {
+        return (int) $this->db->fetchColumn("SELECT COUNT(*) FROM users WHERE admin_id = ?", [$adminId]);
+    }
+
+    /**
+     * Count all users globally
      */
     public function count(string $where = '1=1', array $params = []): int
     {

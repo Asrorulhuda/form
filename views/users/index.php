@@ -1,8 +1,11 @@
 <?php
 use App\Models\User;
+use App\Models\Admin;
+use App\Core\Auth;
 use App\Core\View;
 use App\Core\CSRF;
-$pendingApplicantsCount = (new User())->countPending();
+$isSuperAdmin = Auth::isSuperAdmin();
+$pendingApplicantsCount = $isSuperAdmin ? (new Admin())->countPending() : 0;
 ?>
 
 <div class="bento-grid">
@@ -15,14 +18,14 @@ $pendingApplicantsCount = (new User())->countPending();
             <div>
                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                     <h2 class="bento-hero-title" style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-primary);">
-                        Manajemen Pengguna &amp; Instansi
+                        <?= $isSuperAdmin ? 'Manajemen Semua Pengguna' : 'Kelola Pengguna Tenant' ?>
                     </h2>
                     <span class="badge badge-primary" style="font-size: 11px; font-weight: 700;">
                         Total: <?= number_format($total) ?> Pengguna
                     </span>
                 </div>
                 <div class="bento-hero-desc" style="font-size: 13px; color: var(--text-muted);">
-                    Kelola hak akses role, status keanggotaan akun instansi, dan paket lisensi berlangganan.
+                    <?= $isSuperAdmin ? 'Kelola seluruh pengguna di semua tenant.' : 'Kelola akun pengguna yang terdaftar di bawah instansi/tenant Anda.' ?>
                 </div>
             </div>
         </div>
@@ -34,19 +37,19 @@ $pendingApplicantsCount = (new User())->countPending();
         </div>
     </div>
 
-    <!-- Alert Pending Approval Bento Card (if any) -->
-    <?php if ($pendingApplicantsCount > 0): ?>
+    <!-- Alert Pending Approval Bento Card (if any for Super Admin) -->
+    <?php if ($isSuperAdmin && $pendingApplicantsCount > 0): ?>
         <div class="bento-col-12 bento-card fade-in" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; padding: 14px 20px;">
             <div class="flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-3">
                     <span style="font-size: 24px;">⏳</span>
                     <div>
-                        <strong style="color: #92400e; font-size: 14px; font-weight: 800;">Ada <?= $pendingApplicantsCount ?> Pendaftar Baru Menunggu Persetujuan (ACC)</strong>
-                        <p style="font-size: 12px; color: #b45309; margin: 2px 0 0;">Pendaftar akun baru memerlukan persetujuan administrator sebelum dapat mengakses panel.</p>
+                        <strong style="color: #92400e; font-size: 14px; font-weight: 800;">Ada <?= $pendingApplicantsCount ?> Pendaftaran Admin Baru Menunggu Persetujuan (ACC)</strong>
+                        <p style="font-size: 12px; color: #b45309; margin: 2px 0 0;">Pendaftar admin tenant baru memerlukan persetujuan Super Admin sebelum dapat login.</p>
                     </div>
                 </div>
-                <a href="<?= url('applicants') ?>" class="btn btn-sm" style="background: #f59e0b; color: white; font-weight: 800; border-radius: 8px;">
-                    Buka Menu Pendaftar &rarr;
+                <a href="<?= url('admins?tab=pending') ?>" class="btn btn-sm" style="background: #f59e0b; color: white; font-weight: 800; border-radius: 8px;">
+                    Buka Menu Admin &rarr;
                 </a>
             </div>
         </div>
@@ -91,8 +94,10 @@ $pendingApplicantsCount = (new User())->countPending();
                     <tr>
                         <th>Nama Pengguna</th>
                         <th>Email &amp; WhatsApp</th>
+                        <?php if ($isSuperAdmin): ?>
+                            <th>Tenant / Admin</th>
+                        <?php endif; ?>
                         <th>Peran (Role)</th>
-                        <th>Paket Langganan</th>
                         <th>Status Akun</th>
                         <th>Terdaftar</th>
                         <th style="text-align: right;">Aksi</th>
@@ -120,20 +125,14 @@ $pendingApplicantsCount = (new User())->countPending();
                                         </div>
                                     <?php endif; ?>
                                 </td>
+                                <?php if ($isSuperAdmin): ?>
+                                    <td>
+                                        <span class="badge badge-secondary" style="font-weight: 600;">
+                                            🏢 <?= e($u->admin_name ?? 'Super Admin') ?>
+                                        </span>
+                                    </td>
+                                <?php endif; ?>
                                 <td><span class="badge badge-primary" style="font-weight: 600;"><?= e($u->role_name) ?></span></td>
-                                <td>
-                                    <?php 
-                                        $pName = $u->plan ?? 'Gratis';
-                                        $pBadge = match(strtolower($pName)) {
-                                            'pro' => 'badge-primary',
-                                            'enterprise' => 'badge-warning',
-                                            default => 'badge-secondary',
-                                        };
-                                    ?>
-                                    <span class="badge <?= $pBadge ?>" style="font-weight: 700;">
-                                        <?= e($pName) ?>
-                                    </span>
-                                </td>
                                 <td>
                                     <?php if ($u->status === 'active'): ?>
                                         <span class="badge badge-success" style="font-weight: 700;">Aktif</span>

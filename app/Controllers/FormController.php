@@ -35,10 +35,14 @@ class FormController
         $where = '1=1';
         $params = [];
 
-        // If not Super Admin / Admin, show only the user's forms
-        if (!Auth::hasRole('Super Admin', 'Admin')) {
-            $where .= " AND f.user_id = ?";
-            $params[] = Auth::id();
+        // Tenant isolation: Admin sees only their forms, Super Admin sees all
+        if (Auth::isAdmin()) {
+            $where .= " AND f.admin_id = ?";
+            $params[] = Auth::adminId();
+        } elseif (Auth::isUser()) {
+            // Users shouldn't access this, but safety check
+            $where .= " AND f.admin_id = ?";
+            $params[] = Auth::adminId();
         }
 
         if ($search !== '') {
@@ -56,11 +60,11 @@ class FormController
         $offset = ($page - 1) * $perPage;
 
         $forms = $this->db->fetchAll(
-            "SELECT f.*, u.name as creator_name,
+            "SELECT f.*, a.name as creator_name,
                     (SELECT COUNT(*) FROM form_responses WHERE form_id = f.id) as response_count,
                     (SELECT COUNT(*) FROM form_fields WHERE form_id = f.id) as field_count
              FROM forms f 
-             LEFT JOIN users u ON f.user_id = u.id 
+             LEFT JOIN admins a ON f.admin_id = a.id 
              WHERE {$where} 
              ORDER BY f.created_at DESC 
              LIMIT {$perPage} OFFSET {$offset}",
@@ -114,7 +118,7 @@ class FormController
         }
 
         $formId = $this->db->insert('forms', [
-            'user_id'       => Auth::id(),
+            'admin_id'      => Auth::adminId(),
             'title'         => $title,
             'slug'          => $slug,
             'description'   => $description,

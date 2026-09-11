@@ -1,7 +1,7 @@
 <?php
 
 /**
- * ASR FORM - Route Definitions
+ * ASR FORM — Multi-SaaS Route Definitions
  * 
  * @var \App\Core\Router $router
  */
@@ -38,69 +38,63 @@ $router->get('update-database', 'HomeController', 'updateDatabase');
 $router->get('database/update', 'HomeController', 'updateDatabase');
 
 // ──────────────────────────────────────────
-// Protected Routes (Auth Required)
+// Protected Routes (Auth Required — All admin types)
 // ──────────────────────────────────────────
 
-// Dashboard
+// Dashboard (all roles)
 $router->get('dashboard', 'DashboardController', 'index', ['AuthMiddleware']);
 
-// Forms & Visual Builder
-$router->get('forms', 'FormController', 'index', ['AuthMiddleware']);
-$router->get('forms/create', 'FormController', 'create', ['AuthMiddleware']);
-$router->post('forms/store', 'FormController', 'store', ['AuthMiddleware']);
-$router->get('forms/{id}/builder', 'FormController', 'builder', ['AuthMiddleware']);
-$router->post('forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware']);
-$router->post('api/forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware']);
-$router->post('forms/{id}/upload-bg', 'FormController', 'uploadBackground', ['AuthMiddleware']);
-$router->post('forms/{id}/delete-bg', 'FormController', 'deleteBackground', ['AuthMiddleware']);
-$router->get('forms/{id}/responses', 'FormController', 'responses', ['AuthMiddleware']);
-$router->get('forms/{id}/responses/export', 'FormController', 'exportResponses', ['AuthMiddleware']);
-$router->post('forms/{id}/responses/clear', 'FormController', 'clearResponses', ['AuthMiddleware']);
-$router->post('forms/{id}/responses/{responseId}/delete', 'FormController', 'deleteResponse', ['AuthMiddleware']);
-$router->post('forms/{id}/delete', 'FormController', 'destroy', ['AuthMiddleware']);
+// Forms & Visual Builder (Admin + Super Admin)
+$router->get('forms', 'FormController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('forms/create', 'FormController', 'create', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/store', 'FormController', 'store', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('forms/{id}/builder', 'FormController', 'builder', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('api/forms/{id}/save', 'FormController', 'saveFields', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/upload-bg', 'FormController', 'uploadBackground', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/delete-bg', 'FormController', 'deleteBackground', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('forms/{id}/responses', 'FormController', 'responses', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('forms/{id}/responses/export', 'FormController', 'exportResponses', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/responses/clear', 'FormController', 'clearResponses', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/responses/{responseId}/delete', 'FormController', 'deleteResponse', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('forms/{id}/delete', 'FormController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
 
-// Document Templates (Word .DOCX Engine & Professional Letter Editor)
-$router->get('templates', 'TemplateController', 'index', ['AuthMiddleware']);
-$router->get('templates/create', 'TemplateController', 'create', ['AuthMiddleware']);
-$router->get('templates/editor', 'TemplateController', 'editor', ['AuthMiddleware']);
-$router->post('templates/store-editor', 'TemplateController', 'storeEditor', ['AuthMiddleware']);
-$router->get('templates/{id}/edit', 'TemplateController', 'edit', ['AuthMiddleware']);
-$router->post('templates/{id}/update-editor', 'TemplateController', 'updateEditor', ['AuthMiddleware']);
-$router->post('templates/upload-image', 'TemplateController', 'uploadImage', ['AuthMiddleware']);
-$router->post('templates/store', 'TemplateController', 'store', ['AuthMiddleware']);
-$router->get('templates/{id}/mapping', 'TemplateController', 'mapping', ['AuthMiddleware']);
-$router->post('templates/{id}/mapping', 'TemplateController', 'saveMapping', ['AuthMiddleware']);
-$router->get('templates/{id}/versions', 'TemplateController', 'versions', ['AuthMiddleware']);
-$router->post('templates/{id}/versions', 'TemplateController', 'uploadVersion', ['AuthMiddleware']);
-$router->post('templates/{id}/duplicate', 'TemplateController', 'duplicate', ['AuthMiddleware']);
-$router->get('templates/{id}/download', 'TemplateController', 'download', ['AuthMiddleware']);
-$router->post('templates/{id}/delete', 'TemplateController', 'destroy', ['AuthMiddleware']);
+// Document Templates (Admin + Super Admin)
+$router->get('templates', 'TemplateController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/create', 'TemplateController', 'create', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/editor', 'TemplateController', 'editor', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/store-editor', 'TemplateController', 'storeEditor', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/{id}/edit', 'TemplateController', 'edit', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/{id}/update-editor', 'TemplateController', 'updateEditor', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/upload-image', 'TemplateController', 'uploadImage', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/store', 'TemplateController', 'store', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/{id}/mapping', 'TemplateController', 'mapping', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/{id}/mapping', 'TemplateController', 'saveMapping', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/{id}/versions', 'TemplateController', 'versions', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/{id}/versions', 'TemplateController', 'uploadVersion', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/{id}/duplicate', 'TemplateController', 'duplicate', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('templates/{id}/download', 'TemplateController', 'download', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('templates/{id}/delete', 'TemplateController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
 
-// Generator Surat & Dokumen
-$router->get('documents', 'DocumentController', 'index', ['AuthMiddleware']);
-$router->get('documents/create', 'DocumentController', 'create', ['AuthMiddleware']);
-$router->post('documents/store', 'DocumentController', 'store', ['AuthMiddleware']);
-$router->get('documents/{id}/download-docx', 'DocumentController', 'downloadDocx', ['AuthMiddleware']);
-$router->get('documents/{id}/download-pdf', 'DocumentController', 'downloadPdf', ['AuthMiddleware']);
-$router->post('documents/{id}/delete', 'DocumentController', 'destroy', ['AuthMiddleware']);
+// Generator Surat & Dokumen (Admin + Super Admin)
+$router->get('documents', 'DocumentController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('documents/create', 'DocumentController', 'create', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('documents/store', 'DocumentController', 'store', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('documents/{id}/download-docx', 'DocumentController', 'downloadDocx', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('documents/{id}/download-pdf', 'DocumentController', 'downloadPdf', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('documents/{id}/delete', 'DocumentController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
 
-// Responses
-$router->get('responses', 'ResponseController', 'index', ['AuthMiddleware']);
-$router->get('responses/export', 'ResponseController', 'export', ['AuthMiddleware']);
-$router->post('responses/clear', 'ResponseController', 'clear', ['AuthMiddleware']);
-$router->post('responses/{id}/delete', 'ResponseController', 'destroy', ['AuthMiddleware']);
-$router->post('responses/{id}/send-wa', 'ResponseController', 'sendWhatsApp', ['AuthMiddleware']);
+// Responses (Admin + Super Admin)
+$router->get('responses', 'ResponseController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
+$router->get('responses/export', 'ResponseController', 'export', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('responses/clear', 'ResponseController', 'clear', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('responses/{id}/delete', 'ResponseController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('responses/{id}/send-wa', 'ResponseController', 'sendWhatsApp', ['AuthMiddleware', 'RoleMiddleware']);
 
 // ──────────────────────────────────────────
-// Admin Routes (Auth + Role Required)
+// Admin Routes — Manage Users (Admin + Super Admin)
 // ──────────────────────────────────────────
 
-// Applicants (Approval Pendaftar Baru)
-$router->get('applicants', 'ApplicantController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('applicants/{id}/approve', 'ApplicantController', 'approve', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('applicants/{id}/reject', 'ApplicantController', 'reject', ['AuthMiddleware', 'RoleMiddleware']);
-
-// Users
 $router->get('users', 'UserController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
 $router->get('users/create', 'UserController', 'create', ['AuthMiddleware', 'RoleMiddleware']);
 $router->post('users/store', 'UserController', 'store', ['AuthMiddleware', 'RoleMiddleware']);
@@ -108,43 +102,63 @@ $router->get('users/{id}/edit', 'UserController', 'edit', ['AuthMiddleware', 'Ro
 $router->post('users/{id}/update', 'UserController', 'update', ['AuthMiddleware', 'RoleMiddleware']);
 $router->post('users/{id}/delete', 'UserController', 'destroy', ['AuthMiddleware', 'RoleMiddleware']);
 
-// Settings
-$router->get('settings', 'SettingController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/update', 'SettingController', 'update', ['AuthMiddleware', 'RoleMiddleware']);
+// Tenant WhatsApp Gateway Settings (Admin + Super Admin)
+$router->get('settings/wa', 'AdminController', 'waSettings', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('settings/wa/update', 'AdminController', 'updateWaSettings', ['AuthMiddleware', 'RoleMiddleware']);
+$router->post('settings/wa/test', 'AdminController', 'testWa', ['AuthMiddleware', 'RoleMiddleware']);
 
-// Audit Log
-$router->get('audit-log', 'AuditLogController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
+// ──────────────────────────────────────────
+// Super Admin Only Routes
+// ──────────────────────────────────────────
 
-// Settings Sub-pages (Site, Pages, Ads, Payment, Gateway)
-$router->get('settings/site', 'SettingController', 'site', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/site/update', 'SettingController', 'updateSite', ['AuthMiddleware', 'RoleMiddleware']);
-$router->get('settings/pages', 'SettingController', 'pages', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/pages/update', 'SettingController', 'updatePages', ['AuthMiddleware', 'RoleMiddleware']);
-$router->get('settings/ads', 'AdsController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/ads/update', 'AdsController', 'update', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/ads/slots/{id}/toggle', 'AdsController', 'toggleSlot', ['AuthMiddleware', 'RoleMiddleware']);
-$router->get('settings/payment', 'SettingController', 'payment', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/payment/update', 'SettingController', 'updatePayment', ['AuthMiddleware', 'RoleMiddleware']);
-$router->get('settings/gateway', 'GatewayController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/gateway/update', 'GatewayController', 'update', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/gateway/test-wa', 'GatewayController', 'testWhatsApp', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/gateway/test-mail', 'GatewayController', 'testMail', ['AuthMiddleware', 'RoleMiddleware']);
-$router->get('settings/github', 'WebhookController', 'settings', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/github/update', 'WebhookController', 'updateSettings', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/github/pull', 'WebhookController', 'manualPull', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('settings/github/clear-logs', 'WebhookController', 'clearLogs', ['AuthMiddleware', 'RoleMiddleware']);
+// Admin Management (Super Admin manages tenant admins)
+$router->get('admins', 'AdminController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('admins/create', 'AdminController', 'create', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/store', 'AdminController', 'store', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('admins/{id}/edit', 'AdminController', 'edit', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/{id}/update', 'AdminController', 'update', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/{id}/delete', 'AdminController', 'destroy', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/{id}/approve', 'AdminController', 'approve', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/{id}/reject', 'AdminController', 'reject', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/{id}/impersonate', 'AdminController', 'impersonate', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('admins/leave-impersonate', 'AdminController', 'leaveImpersonate', ['AuthMiddleware']);
+$router->get('admins/leave-impersonate', 'AdminController', 'leaveImpersonate', ['AuthMiddleware']);
 
-// Admin: Payments Management
-$router->get('payments', 'PaymentController', 'index', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('payments/{id}/verify', 'PaymentController', 'verify', ['AuthMiddleware', 'RoleMiddleware']);
-$router->post('payments/{id}/reject', 'PaymentController', 'reject', ['AuthMiddleware', 'RoleMiddleware']);
+// Global Settings (Super Admin only)
+$router->get('settings', 'SettingController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/update', 'SettingController', 'update', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/site', 'SettingController', 'site', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/site/update', 'SettingController', 'updateSite', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/pages', 'SettingController', 'pages', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/pages/update', 'SettingController', 'updatePages', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/ads', 'AdsController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/ads/update', 'AdsController', 'update', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/ads/slots/{id}/toggle', 'AdsController', 'toggleSlot', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/payment', 'SettingController', 'payment', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/payment/update', 'SettingController', 'updatePayment', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/gateway', 'GatewayController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/gateway/update', 'GatewayController', 'update', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/gateway/test-wa', 'GatewayController', 'testWhatsApp', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/gateway/test-mail', 'GatewayController', 'testMail', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->get('settings/github', 'WebhookController', 'settings', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/github/update', 'WebhookController', 'updateSettings', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/github/pull', 'WebhookController', 'manualPull', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('settings/github/clear-logs', 'WebhookController', 'clearLogs', ['AuthMiddleware', 'SuperAdminMiddleware']);
+
+// Payments Management (Super Admin only)
+$router->get('payments', 'PaymentController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('payments/{id}/verify', 'PaymentController', 'verify', ['AuthMiddleware', 'SuperAdminMiddleware']);
+$router->post('payments/{id}/reject', 'PaymentController', 'reject', ['AuthMiddleware', 'SuperAdminMiddleware']);
+
+// Audit Log (Super Admin only)
+$router->get('audit-log', 'AuditLogController', 'index', ['AuthMiddleware', 'SuperAdminMiddleware']);
 
 // ──────────────────────────────────────────
 // Public Payment & Confirmation (No Auth Required)
 // ──────────────────────────────────────────
-$router->get('payment/{userId}', 'PaymentController', 'showCheckout');
+$router->get('payment/{adminId}', 'PaymentController', 'showCheckout');
 $router->post('payment/submit', 'PaymentController', 'submitProof');
-$router->get('payment/{userId}/success', 'PaymentController', 'showSuccess');
+$router->get('payment/{adminId}/success', 'PaymentController', 'showSuccess');
 
 // ──────────────────────────────────────────
 // Public Pages (No Auth Required)
@@ -166,4 +180,3 @@ $router->get('f/{slug}', 'PublicFormController', 'show');
 $router->get('{slug}', 'PublicFormController', 'showDirect');
 $router->post('{slug}/submit', 'PublicFormController', 'submit');
 $router->get('{slug}/success', 'PublicFormController', 'success');
-

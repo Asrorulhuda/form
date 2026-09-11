@@ -3,7 +3,22 @@ use App\Core\Auth;
 
 $user = Auth::user();
 $role = $user ? $user->role : '';
-$isSuperAdmin = ($role === 'Super Admin');
+$isSuperAdmin = Auth::isSuperAdmin();
+$isAdmin = Auth::isAdmin();
+$isUser = Auth::isUser();
+
+$totalForms       = $totalForms ?? 0;
+$totalResponses   = $totalResponses ?? 0;
+$totalDocuments   = $totalDocuments ?? 0;
+$pendingDocs      = $pendingDocs ?? 0;
+$approvedDocs     = $approvedDocs ?? 0;
+$totalUsers       = $totalUsers ?? 0;
+$totalAdmins      = $totalAdmins ?? 0;
+$pendingAdmins    = $pendingAdmins ?? 0;
+$availableForms   = $availableForms ?? [];
+$recentActivity   = $recentActivity ?? [];
+$monthlyResponses = $monthlyResponses ?? [];
+$monthlyDocuments = $monthlyDocuments ?? [];
 
 $greeting = match(true) {
     (int)date('H') < 12  => 'Selamat Pagi',
@@ -28,8 +43,8 @@ $greeting = match(true) {
                     <h2 class="bento-hero-title" style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.4px;">
                         <?= $greeting ?>, <?= e($user->name ?? 'Pengguna') ?>!
                     </h2>
-                    <span class="badge <?= $isSuperAdmin ? 'badge-primary' : 'badge-success' ?>" style="font-size: 11px; padding: 2px 8px; font-weight: 700;">
-                        <?= $isSuperAdmin ? '👑 Super Admin' : ('🏢 ' . e($user->plan ?? 'Creator Pro')) ?>
+                    <span class="badge <?= $isSuperAdmin ? 'badge-primary' : ($isAdmin ? 'badge-success' : 'badge-secondary') ?>" style="font-size: 11px; padding: 2px 8px; font-weight: 700;">
+                        <?= $isSuperAdmin ? '👑 Super Admin' : ($isAdmin ? ('🏢 Admin (' . e($user->plan ?? 'Gratis') . ')') : '👤 Pengguna') ?>
                     </span>
                 </div>
                 <div class="bento-hero-desc" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: #64748b;">
@@ -38,20 +53,22 @@ $greeting = match(true) {
                         Sistem Online &amp; Terverifikasi
                     </span>
                     <span>•</span>
-                    <span>Kelola formulir kustom, tangkap data respons, dan terbitkan dokumen berpenomoran otomatis.</span>
+                    <span><?= $isUser ? 'Selamat datang di panel formulir dan layanan digital Anda.' : 'Kelola formulir kustom, tangkap data respons, dan terbitkan dokumen berpenomoran otomatis.' ?></span>
                 </div>
             </div>
         </div>
 
         <div class="bento-hero-actions">
-            <a href="<?= url('forms/create') ?>" class="btn btn-primary btn-sm" style="box-shadow: 0 4px 14px rgba(79,70,229,0.28); font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Buat Formulir
-            </a>
-            <a href="<?= url('templates') ?>" class="btn btn-secondary btn-sm" style="font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Template Word
-            </a>
+            <?php if (!$isUser): ?>
+                <a href="<?= url('forms/create') ?>" class="btn btn-primary btn-sm" style="box-shadow: 0 4px 14px rgba(79,70,229,0.28); font-weight: 600;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Buat Formulir
+                </a>
+                <a href="<?= url('templates') ?>" class="btn btn-secondary btn-sm" style="font-weight: 600;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Template Word
+                </a>
+            <?php endif; ?>
             <?php if ($isSuperAdmin): ?>
                 <a href="<?= url('settings') ?>" class="btn btn-secondary btn-sm" style="font-weight: 600;" title="Pengaturan Sistem">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -60,135 +77,168 @@ $greeting = match(true) {
         </div>
     </div>
 
-    <!-- 2. Stat Bento Tiles (6 Distinct Cards) -->
-    <!-- Tile 1: Total Forms -->
-    <a href="<?= url('forms') ?>" class="bento-col-2 bento-stat-tile primary fade-in stagger-1">
-        <div class="bento-stat-top">
-            <div class="bento-stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-            </div>
-            <span class="bento-stat-pill">Formulir</span>
-        </div>
-        <div>
-            <div class="bento-stat-val"><?= number_format($totalForms) ?></div>
-            <div class="bento-stat-lbl">Total Formulir Aktif</div>
-        </div>
-    </a>
-
-    <!-- Tile 2: Total Responses -->
-    <a href="<?= url('responses') ?>" class="bento-col-2 bento-stat-tile success fade-in stagger-2">
-        <div class="bento-stat-top">
-            <div class="bento-stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-            </div>
-            <span class="bento-stat-pill" style="background: var(--success-50); color: var(--success-700);">Respons</span>
-        </div>
-        <div>
-            <div class="bento-stat-val"><?= number_format($totalResponses) ?></div>
-            <div class="bento-stat-lbl">Data Masuk</div>
-        </div>
-    </a>
-
-    <!-- Tile 3: Total Documents -->
-    <a href="<?= url('documents') ?>" class="bento-col-2 bento-stat-tile info fade-in stagger-3">
-        <div class="bento-stat-top">
-            <div class="bento-stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                </svg>
-            </div>
-            <span class="bento-stat-pill" style="background: var(--info-50); color: var(--info-700);">Dokumen</span>
-        </div>
-        <div>
-            <div class="bento-stat-val"><?= number_format($totalDocuments) ?></div>
-            <div class="bento-stat-lbl">Dokumen Tergenerate</div>
-        </div>
-    </a>
-
-    <!-- Tile 4: Pending Approval -->
-    <a href="<?= url($isSuperAdmin ? 'applicants' : 'documents?status=pending') ?>" class="bento-col-2 bento-stat-tile warning fade-in stagger-4">
-        <div class="bento-stat-top">
-            <div class="bento-stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                </svg>
-            </div>
-            <span class="bento-stat-pill" style="background: var(--warning-50); color: var(--warning-700);">Review</span>
-        </div>
-        <div>
-            <div class="bento-stat-val"><?= number_format($pendingDocs) ?></div>
-            <div class="bento-stat-lbl"><?= $isSuperAdmin ? 'Pending Approval' : 'Menunggu Validasi' ?></div>
-        </div>
-    </a>
-
-    <!-- Tile 5: Approved Docs -->
-    <a href="<?= url('documents?status=approved') ?>" class="bento-col-2 bento-stat-tile success fade-in stagger-5">
-        <div class="bento-stat-top">
-            <div class="bento-stat-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-            </div>
-            <span class="bento-stat-pill" style="background: #d1fae5; color: #047857;">Selesai</span>
-        </div>
-        <div>
-            <div class="bento-stat-val"><?= number_format($approvedDocs) ?></div>
-            <div class="bento-stat-lbl">Dokumen Sah Terbit</div>
-        </div>
-    </a>
-
-    <!-- Tile 6: Total Users or Server Status -->
-    <?php if ($isSuperAdmin): ?>
-        <a href="<?= url('users') ?>" class="bento-col-2 bento-stat-tile purple fade-in stagger-6">
-            <div class="bento-stat-top">
-                <div class="bento-stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
+    <?php if ($isUser): ?>
+        <!-- 2. End-User View: Available Forms -->
+        <div class="bento-col-12 bento-card fade-in" style="padding: 24px;">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>📋</span> Formulir yang Dapat Anda Isi
+            </h3>
+            <?php if (!empty($availableForms)): ?>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                    <?php foreach ($availableForms as $form): ?>
+                        <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary);"><?= e($form->title) ?></h4>
+                                <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.4;">
+                                    <?= e($form->description ?: 'Formulir digital siap diisi.') ?>
+                                </p>
+                            </div>
+                            <a href="<?= url('form/' . $form->slug) ?>" target="_blank" class="btn btn-primary btn-sm" style="font-weight: 600; text-align: center;">
+                                Buka &amp; Isi Formulir &rarr;
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <span class="bento-stat-pill" style="background: #f3e8ff; color: #7e22ce;">User</span>
-            </div>
-            <div>
-                <div class="bento-stat-val"><?= number_format($totalUsers) ?></div>
-                <div class="bento-stat-lbl">Total Pengguna</div>
-            </div>
-        </a>
+            <?php else: ?>
+                <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+                    <div style="font-weight: 600;">Belum Ada Formulir Tersedia</div>
+                    <div style="font-size: 13px; margin-top: 4px;">Instansi/Admin Anda belum menerbitkan formulir publik.</div>
+                </div>
+            <?php endif; ?>
+        </div>
     <?php else: ?>
-        <a href="<?= url('settings') ?>" class="bento-col-2 bento-stat-tile purple fade-in stagger-6">
+        <!-- 2. Stat Bento Tiles (6 Distinct Cards for Admin/SuperAdmin) -->
+        <!-- Tile 1: Total Forms -->
+        <a href="<?= url('forms') ?>" class="bento-col-2 bento-stat-tile primary fade-in stagger-1">
             <div class="bento-stat-top">
                 <div class="bento-stat-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                 </div>
-                <span class="bento-stat-pill" style="background: #f3e8ff; color: #7e22ce;">Status</span>
+                <span class="bento-stat-pill">Formulir</span>
             </div>
             <div>
-                <div class="bento-stat-val" style="font-size: 16px; margin-top: 4px; font-weight: 800; color: #7e22ce;">Aktif</div>
-                <div class="bento-stat-lbl">Status Lisensi Akun</div>
+                <div class="bento-stat-val"><?= number_format($totalForms) ?></div>
+                <div class="bento-stat-lbl">Total Formulir Aktif</div>
             </div>
         </a>
+
+        <!-- Tile 2: Total Responses -->
+        <a href="<?= url('responses') ?>" class="bento-col-2 bento-stat-tile success fade-in stagger-2">
+            <div class="bento-stat-top">
+                <div class="bento-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </div>
+                <span class="bento-stat-pill" style="background: var(--success-50); color: var(--success-700);">Respons</span>
+            </div>
+            <div>
+                <div class="bento-stat-val"><?= number_format($totalResponses) ?></div>
+                <div class="bento-stat-lbl">Data Masuk</div>
+            </div>
+        </a>
+
+        <!-- Tile 3: Total Documents -->
+        <a href="<?= url('documents') ?>" class="bento-col-2 bento-stat-tile info fade-in stagger-3">
+            <div class="bento-stat-top">
+                <div class="bento-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <span class="bento-stat-pill" style="background: var(--info-50); color: var(--info-700);">Dokumen</span>
+            </div>
+            <div>
+                <div class="bento-stat-val"><?= number_format($totalDocuments) ?></div>
+                <div class="bento-stat-lbl">Dokumen Tergenerate</div>
+            </div>
+        </a>
+
+        <!-- Tile 4: Pending Approval / Admin Pending -->
+        <a href="<?= url($isSuperAdmin ? 'admins?tab=pending' : 'documents?status=pending') ?>" class="bento-col-2 bento-stat-tile warning fade-in stagger-4">
+            <div class="bento-stat-top">
+                <div class="bento-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <span class="bento-stat-pill" style="background: var(--warning-50); color: var(--warning-700);"><?= $isSuperAdmin ? 'Admin' : 'Review' ?></span>
+            </div>
+            <div>
+                <div class="bento-stat-val"><?= number_format($isSuperAdmin ? ($pendingAdmins ?? 0) : ($pendingDocs ?? 0)) ?></div>
+                <div class="bento-stat-lbl"><?= $isSuperAdmin ? 'Admin Pending' : 'Menunggu Validasi' ?></div>
+            </div>
+        </a>
+
+        <!-- Tile 5: Approved Docs -->
+        <a href="<?= url('documents?status=approved') ?>" class="bento-col-2 bento-stat-tile success fade-in stagger-5">
+            <div class="bento-stat-top">
+                <div class="bento-stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <span class="bento-stat-pill" style="background: #d1fae5; color: #047857;">Selesai</span>
+            </div>
+            <div>
+                <div class="bento-stat-val"><?= number_format($approvedDocs ?? 0) ?></div>
+                <div class="bento-stat-lbl">Dokumen Sah Terbit</div>
+            </div>
+        </a>
+
+        <!-- Tile 6: Admins for Super Admin / Users for Admin -->
+        <?php if ($isSuperAdmin): ?>
+            <a href="<?= url('admins') ?>" class="bento-col-2 bento-stat-tile purple fade-in stagger-6">
+                <div class="bento-stat-top">
+                    <div class="bento-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                        </svg>
+                    </div>
+                    <span class="bento-stat-pill" style="background: #f3e8ff; color: #7e22ce;">Tenant</span>
+                </div>
+                <div>
+                    <div class="bento-stat-val"><?= number_format($totalAdmins ?? 0) ?></div>
+                    <div class="bento-stat-lbl">Total Admin Tenant</div>
+                </div>
+            </a>
+        <?php else: ?>
+            <a href="<?= url('users') ?>" class="bento-col-2 bento-stat-tile purple fade-in stagger-6">
+                <div class="bento-stat-top">
+                    <div class="bento-stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <span class="bento-stat-pill" style="background: #f3e8ff; color: #7e22ce;">User</span>
+                </div>
+                <div>
+                    <div class="bento-stat-val"><?= number_format($totalUsers ?? 0) ?></div>
+                    <div class="bento-stat-lbl">Pengguna Saya</div>
+                </div>
+            </a>
+        <?php endif; ?>
     <?php endif; ?>
 
-    <!-- 3. Bottom Bento Row: Chart (Span 7) & Quick Workflow / Activity (Span 5) -->
-    <!-- Monthly Analytics Bento Card -->
-    <div class="bento-col-7 bento-card fade-in">
-        <div class="flex items-center justify-between mb-4 pb-2" style="border-bottom: 1px solid var(--border-subtle);">
-            <div>
-                <h3 class="card-title" style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Statistik &amp; Tren Bulanan</h3>
-                <p class="text-sm text-muted" style="margin: 2px 0 0; font-size: 12.5px;">Grafik respons formulir masuk &amp; penerbitan dokumen resmi</p>
+    <?php if (!$isUser): ?>
+        <!-- 3. Bottom Bento Row: Chart (Span 7) & Quick Workflow / Activity (Span 5) -->
+        <!-- Monthly Analytics Bento Card -->
+        <div class="bento-col-7 bento-card fade-in">
+            <div class="flex items-center justify-between mb-4 pb-2" style="border-bottom: 1px solid var(--border-subtle);">
+                <div>
+                    <h3 class="card-title" style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Statistik &amp; Tren Bulanan</h3>
+                    <p class="text-sm text-muted" style="margin: 2px 0 0; font-size: 12.5px;">Grafik respons formulir masuk &amp; penerbitan dokumen resmi</p>
+                </div>
+                <span class="badge badge-primary" style="font-size: 11px; font-weight: 700;">6 Bulan Terakhir</span>
             </div>
-            <span class="badge badge-primary" style="font-size: 11px; font-weight: 700;">6 Bulan Terakhir</span>
+            <div style="height: 270px; position: relative; width: 100%;">
+                <canvas id="monthlyChart"></canvas>
+            </div>
         </div>
-        <div style="height: 270px; position: relative; width: 100%;">
-            <canvas id="monthlyChart"></canvas>
-        </div>
-    </div>
 
     <!-- Right Side Bento Card: Illustrative Workflow or Activity -->
     <div class="bento-col-5 bento-card fade-in" style="display: flex; flex-direction: column;">
@@ -272,6 +322,7 @@ $greeting = match(true) {
             </div>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
 </div>
 
 <script>

@@ -9,11 +9,12 @@ use App\Core\Session;
 use App\Core\View;
 use App\Core\Response;
 use App\Core\Validator;
+use App\Models\Admin;
 use App\Models\AuditLog;
-use App\Models\User;
 
 /**
- * Authentication Controller
+ * Authentication Controller — Multi-SaaS
+ * Handles login for both admins and users, and registration for new admins.
  */
 class AuthController
 {
@@ -22,7 +23,6 @@ class AuthController
      */
     public function showLogin(): void
     {
-        // Redirect if already logged in
         if (Auth::check()) {
             Response::redirect(url('dashboard'));
             return;
@@ -34,7 +34,7 @@ class AuthController
     }
 
     /**
-     * Process login
+     * Process login (checks admins table first, then users table)
      */
     public function login(): void
     {
@@ -62,7 +62,7 @@ class AuthController
     }
 
     /**
-     * Show registration page
+     * Show registration page (for new Admin accounts)
      */
     public function showRegister(): void
     {
@@ -91,7 +91,7 @@ class AuthController
     }
 
     /**
-     * Process registration
+     * Process registration (creates a new Admin account, pending approval)
      */
     public function register(): void
     {
@@ -108,7 +108,7 @@ class AuthController
 
         $validator = new Validator([
             'name'     => 'required|min:2|max:100',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|email|unique:admins,email',
             'phone'    => 'required|min:9|max:20',
             'password' => 'required|min:6|confirmed',
         ]);
@@ -120,45 +120,41 @@ class AuthController
             return;
         }
 
-        // Default role: User (role_id 6)
-        $db = Database::getInstance();
-        $userRole = $db->fetch("SELECT id FROM roles WHERE name = 'User'");
-        $roleId = $userRole ? (int)$userRole->id : 6;
-
-        $userModel = new User();
-        $userId = $userModel->create([
+        // Create new Admin (role_id = 2, status = pending)
+        $adminModel = new Admin();
+        $adminId = $adminModel->create([
             'name'     => $data['name'],
             'email'    => $data['email'],
             'phone'    => $data['phone'],
             'password' => $data['password'],
-            'role_id'  => $roleId,
+            'role_id'  => 2,
             'plan'     => $data['plan'],
-            'status'   => 'pending', // Pending approval by Administrator
+            'status'   => 'pending',
         ]);
 
-        AuditLog::log('register', 'auth', (int)$userId, "Pendaftaran user baru [Paket: {$data['plan']}]: {$data['name']} ({$data['phone']})");
+        AuditLog::log('register', 'auth', (int)$adminId, "Pendaftaran admin baru [Paket: {$data['plan']}]: {$data['name']} ({$data['phone']})");
 
         $settingModel = new \App\Models\Setting();
         $siteName = $settingModel->get('site_name', 'ASR FORM');
 
-        // ─── 1 & 2. WhatsApp Alerts in Parallel (Ultra-Fast) ───
+        // WhatsApp notification to Super Admin
         $wa = \App\Services\WhatsAppService::getInstance();
         if ($wa->isEnabled()) {
             $adminWaMsg = null;
             if ((int)$settingModel->get('wa_notify_admin_on_register', '1') === 1) {
-                $adminWaMsg = "👤 *PENDAFTARAN PENGGUNA BARU — {$siteName}*\n\n"
+                $adminWaMsg = "👤 *PENDAFTARAN ADMIN BARU — {$siteName}*\n\n"
                             . "📋 *Nama:* {$data['name']}\n"
                             . "📧 *Email:* {$data['email']}\n"
                             . "📱 *Nomor WhatsApp:* {$data['phone']}\n"
                             . "📦 *Paket Dipilih:* {$data['plan']}\n"
                             . "📅 *Waktu Daftar:* " . date('d/m/Y H:i') . " WIB\n\n"
-                            . "👉 Silakan tinjau dan aktifkan akun pemohon di Dashboard Admin:\n" . url('admin/applicants');
+                            . "👉 Silakan tinjau dan aktifkan akun di Dashboard Super Admin:\n" . url('admins');
             }
 
             $userWelcome = null;
             if (!empty($data['phone'])) {
                 $userWelcome = "Halo *{$data['name']}*, terima kasih telah mendaftar di *{$siteName}*!\n\n"
-                             . "Pendaftaran Anda untuk *Paket {$data['plan']}* telah kami terima dan sedang dalam proses verifikasi tim admin kami.\n\n"
+                             . "Pendaftaran Anda untuk *Paket {$data['plan']}* telah kami terima dan sedang dalam proses verifikasi.\n\n"
                              . "🌐 Kunjungi website: " . url();
             }
 
@@ -167,12 +163,12 @@ class AuthController
             }
         }
 
-        // ─── 3. Email Alert to Admin ───
+        // Email notification
         $mail = \App\Services\MailService::getInstance();
         if ($mail->isEnabled() && (int)$settingModel->get('smtp_notify_admin_on_register', '1') === 1) {
             $emailSubj = "[Pendaftar Baru] {$data['name']} - Paket {$data['plan']}";
-            $emailBody = "<h2>Pendaftaran Pengguna Baru Masuk</h2>"
-                       . "<p>Ada pendaftaran akun baru pada platform {$siteName}:</p>"
+            $emailBody = "<h2>Pendaftaran Admin Baru Masuk</h2>"
+                       . "<p>Ada pendaftaran admin baru pada platform {$siteName}:</p>"
                        . "<ul>"
                        . "<li><strong>Nama:</strong> {$data['name']}</li>"
                        . "<li><strong>Email:</strong> {$data['email']}</li>"
@@ -180,7 +176,7 @@ class AuthController
                        . "<li><strong>Paket:</strong> {$data['plan']}</li>"
                        . "<li><strong>Waktu:</strong> " . date('d/m/Y H:i') . " WIB</li>"
                        . "</ul>"
-                       . "<p><a href='" . url('users/applicants') . "'>Klik di sini untuk melihat daftar pemohon akun</a></p>";
+                       . "<p><a href='" . url('admins') . "'>Klik di sini untuk melihat daftar pendaftar</a></p>";
             $mail->notifyAdmin($emailSubj, $emailBody);
         }
 
@@ -188,12 +184,12 @@ class AuthController
         if (strcasecmp($data['plan'], 'Gratis') !== 0) {
             Session::flash('toast_type', 'success');
             Session::flash('toast_message', 'Akun berhasil dibuat! Silakan selesaikan pembayaran untuk paket ' . $data['plan'] . '.');
-            Response::redirect(url("payment/{$userId}"));
+            Response::redirect(url("payment/{$adminId}"));
             return;
         }
 
         Session::flash('toast_type', 'success');
-        Session::flash('toast_message', 'Pendaftaran berhasil! Akun Anda sedang menunggu persetujuan dari Administrator.');
+        Session::flash('toast_message', 'Pendaftaran berhasil! Akun Anda sedang menunggu persetujuan dari Super Admin.');
         Response::redirect(url('login'));
     }
 

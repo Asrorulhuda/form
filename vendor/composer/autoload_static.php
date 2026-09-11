@@ -29,6 +29,7 @@ class ComposerStaticInit8e328babf5844aef76c8a710fac44cc4
     );
 
     public static $classMap = array (
+        'App\\Controllers\\AdminController' => __DIR__ . '/../..' . '/app/Controllers/AdminController.php',
         'App\\Controllers\\AdsController' => __DIR__ . '/../..' . '/app/Controllers/AdsController.php',
         'App\\Controllers\\ApplicantController' => __DIR__ . '/../..' . '/app/Controllers/ApplicantController.php',
         'App\\Controllers\\AuditLogController' => __DIR__ . '/../..' . '/app/Controllers/AuditLogController.php',
@@ -57,7 +58,9 @@ class ComposerStaticInit8e328babf5844aef76c8a710fac44cc4
         'App\\Core\\View' => __DIR__ . '/../..' . '/app/Core/View.php',
         'App\\Middleware\\AuthMiddleware' => __DIR__ . '/../..' . '/app/Middleware/AuthMiddleware.php',
         'App\\Middleware\\RoleMiddleware' => __DIR__ . '/../..' . '/app/Middleware/RoleMiddleware.php',
+        'App\\Middleware\\SuperAdminMiddleware' => __DIR__ . '/../..' . '/app/Middleware/SuperAdminMiddleware.php',
         'App\\Models\\AdSlot' => __DIR__ . '/../..' . '/app/Models/AdSlot.php',
+        'App\\Models\\Admin' => __DIR__ . '/../..' . '/app/Models/Admin.php',
         'App\\Models\\AuditLog' => __DIR__ . '/../..' . '/app/Models/AuditLog.php',
         'App\\Models\\Payment' => __DIR__ . '/../..' . '/app/Models/Payment.php',
         'App\\Models\\Role' => __DIR__ . '/../..' . '/app/Models/Role.php',
@@ -68,6 +71,7 @@ class ComposerStaticInit8e328babf5844aef76c8a710fac44cc4
         'App\\Services\\DocxParser' => __DIR__ . '/../..' . '/app/Services/DocxParser.php',
         'App\\Services\\ExcelExportService' => __DIR__ . '/../..' . '/app/Services/ExcelExportService.php',
         'App\\Services\\GitHubWebhookService' => __DIR__ . '/../..' . '/app/Services/GitHubWebhookService.php',
+        'App\\Services\\HtmlToDocxService' => __DIR__ . '/../..' . '/app/Services/HtmlToDocxService.php',
         'App\\Services\\MailService' => __DIR__ . '/../..' . '/app/Services/MailService.php',
         'App\\Services\\QrCodeService' => __DIR__ . '/../..' . '/app/Services/QrCodeService.php',
         'App\\Services\\WhatsAppService' => __DIR__ . '/../..' . '/app/Services/WhatsAppService.php',

@@ -33,16 +33,22 @@
                     </label>
                 </div>
 
+                <div class="form-group mb-3">
+                    <label class="form-label" for="wa_gateway_url">API Gateway Base URL (Global) <span class="required">*</span></label>
+                    <input type="url" id="wa_gateway_url" name="wa_gateway_url" class="form-control" value="<?= e($waSettings['wa_gateway_url'] ?? 'https://gateway.asr-desain.my.id') ?>" placeholder="https://gateway.asr-desain.my.id">
+                    <small style="color: var(--text-muted); font-size: 11px;">URL endpoint API Gateway WhatsApp terpusat yang berlaku untuk semua tenant (Super Admin managed).</small>
+                </div>
+
                 <div class="grid-2 mb-3">
                     <div class="form-group">
-                        <label class="form-label" for="wa_api_key">API Key <span class="required">*</span></label>
+                        <label class="form-label" for="wa_api_key">Default API Key <span class="required">*</span></label>
                         <input type="password" id="wa_api_key" name="wa_api_key" class="form-control" value="<?= e($waSettings['wa_api_key'] ?? '') ?>" placeholder="Masukkan API Key WhatsApp Gateway Anda">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="wa_sender">Sender Device Number <span class="required">*</span></label>
+                        <label class="form-label" for="wa_sender">Default Sender Device Number <span class="required">*</span></label>
                         <input type="text" id="wa_sender" name="wa_sender" class="form-control" value="<?= e($waSettings['wa_sender'] ?? '') ?>" placeholder="Contoh: 62888xxxx atau 0888xxxx">
-                        <small style="color: var(--text-muted); font-size: 11px;">Nomor HP device Anda yang terhubung di gateway.</small>
+                        <small style="color: var(--text-muted); font-size: 11px;">Nomor HP device default (Super Admin).</small>
                     </div>
                 </div>
 

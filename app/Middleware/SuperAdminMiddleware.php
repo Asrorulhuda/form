@@ -6,11 +6,10 @@ use App\Core\Auth;
 use App\Core\Response;
 
 /**
- * Role Middleware
- * Ensures user is an Admin-type (Super Admin or Admin) for management routes.
- * End-users (role=User) are redirected to dashboard.
+ * Super Admin Middleware
+ * Ensures only Super Admin can access certain routes (e.g., admin management, global settings).
  */
-class RoleMiddleware
+class SuperAdminMiddleware
 {
     public function handle(): bool
     {
@@ -19,8 +18,7 @@ class RoleMiddleware
             return false;
         }
 
-        // Super Admin and Admin have access to management pages
-        if (!Auth::isAnyAdmin()) {
+        if (!Auth::isSuperAdmin()) {
             Response::redirect(url('dashboard'));
             return false;
         }

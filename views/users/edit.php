@@ -6,14 +6,22 @@ $errors = Session::getFlash('errors') ?? [];
 
 <div style="max-width: 640px;">
     <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">Edit Pengguna: <?= e($user->name) ?></h3>
+        <div class="card-header flex items-center justify-between">
+            <div>
+                <h3 class="card-title">Edit Pengguna: <?= e($user->name) ?></h3>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                    Perbarui profil atau kredensial login pengguna.
+                </p>
+            </div>
+            <span class="badge <?= $user->status === 'active' ? 'badge-success' : 'badge-danger' ?>">
+                <?= ucfirst($user->status) ?>
+            </span>
         </div>
         <div class="card-body">
             <form method="POST" action="<?= url("users/{$user->id}/update") ?>">
                 <?= CSRF::field() ?>
 
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label class="form-label" for="name">Nama Lengkap <span class="required">*</span></label>
                     <input type="text" id="name" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>"
                            value="<?= e(Session::old('name', $user->name)) ?>" required>
@@ -22,58 +30,39 @@ $errors = Session::getFlash('errors') ?? [];
                     <?php endif; ?>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="email">Email <span class="required">*</span></label>
-                    <input type="email" id="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                           value="<?= e(Session::old('email', $user->email)) ?>" required>
-                    <?php if (isset($errors['email'])): ?>
-                        <div class="form-error"><?= e($errors['email'][0]) ?></div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Kosongkan jika tidak diubah">
-                    <div class="form-help">Biarkan kosong jika tidak ingin mengubah password.</div>
-                    <?php if (isset($errors['password'])): ?>
-                        <div class="form-error"><?= e($errors['password'][0]) ?></div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="grid-3">
+                <div class="grid-2 mb-3">
                     <div class="form-group">
-                        <label class="form-label" for="role_id">Role <span class="required">*</span></label>
-                        <select id="role_id" name="role_id" class="form-control" required>
-                            <?php foreach ($roles as $role): ?>
-                                <option value="<?= $role->id ?>" <?= $user->role_id == $role->id ? 'selected' : '' ?>>
-                                    <?= e($role->name) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label class="form-label" for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
+                               value="<?= e(Session::old('email', $user->email)) ?>" required>
+                        <?php if (isset($errors['email'])): ?>
+                            <div class="form-error"><?= e($errors['email'][0]) ?></div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="plan">Paket Layanan <span class="required">*</span></label>
-                        <select id="plan" name="plan" class="form-control" required>
-                            <?php if (!empty($plans)): ?>
-                                <?php foreach ($plans as $p): ?>
-                                    <option value="<?= e($p['name'] ?? '') ?>" <?= ($user->plan ?? 'Gratis') === ($p['name'] ?? '') ? 'selected' : '' ?>>
-                                        <?= e($p['name'] ?? '') ?> (<?= e($p['price'] ?? '') ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="Gratis" <?= ($user->plan ?? '') === 'Gratis' ? 'selected' : '' ?>>Gratis</option>
-                                <option value="Pro" <?= ($user->plan ?? '') === 'Pro' ? 'selected' : '' ?>>Pro</option>
-                                <option value="Enterprise" <?= ($user->plan ?? '') === 'Enterprise' ? 'selected' : '' ?>>Enterprise</option>
-                            <?php endif; ?>
-                        </select>
+                        <label class="form-label" for="phone">No. WhatsApp</label>
+                        <input type="text" id="phone" name="phone" class="form-control"
+                               placeholder="Contoh: 081234567890"
+                               value="<?= e(Session::old('phone', $user->phone ?? '')) ?>">
+                    </div>
+                </div>
+
+                <div class="grid-2 mb-3">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password Baru</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Kosongkan jika tidak diubah">
+                        <small style="color: var(--text-muted); font-size: 11px;">Biarkan kosong jika tetap menggunakan password lama.</small>
+                        <?php if (isset($errors['password'])): ?>
+                            <div class="form-error"><?= e($errors['password'][0]) ?></div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="status">Status</label>
+                        <label class="form-label" for="status">Status Akun</label>
                         <select id="status" name="status" class="form-control">
-                            <option value="active" <?= $user->status === 'active' ? 'selected' : '' ?>>Aktif</option>
-                            <option value="inactive" <?= $user->status === 'inactive' ? 'selected' : '' ?>>Nonaktif</option>
+                            <option value="active" <?= Session::old('status', $user->status) === 'active' ? 'selected' : '' ?>>Aktif</option>
+                            <option value="inactive" <?= Session::old('status', $user->status) === 'inactive' ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
                     </div>
                 </div>
@@ -84,7 +73,7 @@ $errors = Session::getFlash('errors') ?? [];
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                             <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
                         </svg>
-                        Perbarui
+                        Perbarui Pengguna
                     </button>
                     <a href="<?= url('users') ?>" class="btn btn-secondary">Batal</a>
                 </div>

@@ -1,23 +1,28 @@
 <?php
 use App\Core\Auth;
-use App\Models\User;
+use App\Models\Admin;
 
 $currentUrl = $currentUrl ?? '';
 $user = $user ?? Auth::user();
 $role = $user ? $user->role : '';
-$isSuperAdmin = ($role === 'Super Admin');
+$isSuperAdmin = Auth::isSuperAdmin();
+$isAdmin = Auth::isAdmin();
+$isUser = Auth::isUser();
 
-// Get pending applicant and payment counts for badge (only for Super Admin)
-$pendingCount = 0;
+// Get pending counts for badge (only for Super Admin)
+$pendingAdminCount = 0;
 $pendingPaymentCount = 0;
 if ($isSuperAdmin) {
-    $pendingCount = (new User())->countPending();
+    $pendingAdminCount = (new Admin())->countPending();
     $pendingPaymentCount = (new \App\Models\Payment())->countPending();
 }
 
-// Define nav items for the 2 roles
-$navItems = [
-    'main' => [
+// Build nav items based on role
+$navItems = [];
+
+// ─── Main Menu (for Admin + Super Admin) ───
+if ($isSuperAdmin || $isAdmin) {
+    $navItems['main'] = [
         'label' => 'Menu Utama',
         'items' => [
             ['url' => 'dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard', 'roles' => '*'],
@@ -26,16 +31,28 @@ $navItems = [
             ['url' => 'templates', 'icon' => 'templates', 'label' => 'Template Surat Word', 'roles' => '*'],
             ['url' => 'responses', 'icon' => 'responses', 'label' => 'Data Respons', 'roles' => '*'],
         ],
-    ],
-];
+    ];
+}
 
-if ($isSuperAdmin) {
-    $navItems['admin'] = [
-        'label' => 'Developer & Admin',
+// ─── Admin: Kelola User & Tenant Settings ───
+if ($isAdmin) {
+    $navItems['tenant'] = [
+        'label' => 'Kelola Tenant',
         'items' => [
-            ['url' => 'applicants', 'icon' => 'applicants', 'label' => 'Pendaftar Baru', 'roles' => ['Super Admin'], 'badge' => $pendingCount],
+            ['url' => 'users', 'icon' => 'users', 'label' => 'Kelola User', 'roles' => ['Admin']],
+            ['url' => 'settings/wa', 'icon' => 'gateway', 'label' => 'WhatsApp Gateway', 'roles' => ['Admin']],
+        ],
+    ];
+}
+
+// ─── Super Admin: Full Management ───
+if ($isSuperAdmin) {
+    $navItems['superadmin'] = [
+        'label' => 'Super Admin',
+        'items' => [
+            ['url' => 'admins', 'icon' => 'applicants', 'label' => 'Kelola Admin', 'roles' => ['Super Admin'], 'badge' => $pendingAdminCount],
             ['url' => 'payments', 'icon' => 'payment', 'label' => 'Kelola Pembayaran', 'roles' => ['Super Admin'], 'badge' => $pendingPaymentCount],
-            ['url' => 'users', 'icon' => 'users', 'label' => 'Kelola Pengguna', 'roles' => ['Super Admin']],
+            ['url' => 'users', 'icon' => 'users', 'label' => 'Semua User', 'roles' => ['Super Admin']],
             ['url' => 'settings', 'icon' => 'settings', 'label' => 'Pengaturan Aplikasi', 'roles' => ['Super Admin']],
             ['url' => 'settings/payment', 'icon' => 'bank', 'label' => 'Metode Pembayaran', 'roles' => ['Super Admin']],
             ['url' => 'settings/gateway', 'icon' => 'gateway', 'label' => 'Gateway & Notifikasi', 'roles' => ['Super Admin']],
@@ -44,6 +61,16 @@ if ($isSuperAdmin) {
             ['url' => 'settings/ads', 'icon' => 'ads', 'label' => 'Iklan & AdSense', 'roles' => ['Super Admin']],
             ['url' => 'settings/github', 'icon' => 'github', 'label' => 'GitHub Webhook', 'roles' => ['Super Admin']],
             ['url' => 'audit-log', 'icon' => 'audit', 'label' => 'Audit Log Sistem', 'roles' => ['Super Admin']],
+        ],
+    ];
+}
+
+// ─── User Menu (simplified) ───
+if ($isUser) {
+    $navItems['user'] = [
+        'label' => 'Menu',
+        'items' => [
+            ['url' => 'dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard', 'roles' => '*'],
         ],
     ];
 }
@@ -82,7 +109,13 @@ function isActive($currentUrl, $url) {
         <div>
             <span class="sidebar-brand">ASR FORM</span>
             <div style="font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; margin-top: -2px;">
-                <?= $isSuperAdmin ? 'Developer / Admin' : 'Creator Panel' ?>
+                <?php if ($isSuperAdmin): ?>
+                    Super Admin
+                <?php elseif ($isAdmin): ?>
+                    Admin Panel
+                <?php else: ?>
+                    User Panel
+                <?php endif; ?>
             </div>
         </div>
     </div>

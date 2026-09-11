@@ -9,47 +9,48 @@ use App\Core\View;
 use App\Core\Response;
 use App\Core\Validator;
 use App\Models\User;
-use App\Models\Role;
 use App\Models\AuditLog;
 
 /**
- * User Management Controller
+ * User Management Controller — Multi-SaaS
+ * Admin manages users that belong to their tenant.
+ * Super Admin can see all users globally.
  */
 class UserController
 {
     private User $userModel;
-    private Role $roleModel;
 
     public function __construct()
     {
         $this->userModel = new User();
-        $this->roleModel = new Role();
     }
 
     /**
-     * List users
+     * List users (scoped to admin's tenant, or global for Super Admin)
      */
     public function index(): void
     {
         $page    = max(1, (int) ($_GET['page'] ?? 1));
         $filters = [
-            'search'  => $_GET['search'] ?? '',
-            'role_id' => $_GET['role_id'] ?? '',
-            'status'  => $_GET['status'] ?? '',
+            'search' => $_GET['search'] ?? '',
+            'status' => $_GET['status'] ?? '',
         ];
 
-        $result = $this->userModel->getAll($filters, $page);
-        $roles  = $this->roleModel->getAll();
+        if (Auth::isSuperAdmin()) {
+            $filters['admin_id'] = $_GET['admin_id'] ?? '';
+            $result = $this->userModel->getAllGlobal($filters, $page);
+        } else {
+            $result = $this->userModel->getAll(Auth::adminId(), $filters, $page);
+        }
 
         View::page('users.index', [
-            'title'     => 'Kelola Pengguna',
-            'pageTitle' => 'Kelola Pengguna',
+            'title'     => 'Kelola User',
+            'pageTitle' => 'Kelola User',
             'users'     => $result['data'],
             'total'     => $result['total'],
             'page'      => $result['page'],
             'lastPage'  => $result['lastPage'],
             'filters'   => $filters,
-            'roles'     => $roles,
         ]);
     }
 
@@ -58,15 +59,9 @@ class UserController
      */
     public function create(): void
     {
-        $roles = $this->roleModel->getAll();
-        $settingModel = new \App\Models\Setting();
-        $plans = json_decode($settingModel->get('page_pricing_items', '[]'), true) ?: [];
-
         View::page('users.create', [
-            'title'     => 'Tambah Pengguna',
-            'pageTitle' => 'Tambah Pengguna',
-            'roles'     => $roles,
-            'plans'     => $plans,
+            'title'     => 'Tambah User',
+            'pageTitle' => 'Tambah User Baru',
         ]);
     }
 
@@ -80,9 +75,8 @@ class UserController
         $data = [
             'name'     => trim($_POST['name'] ?? ''),
             'email'    => trim($_POST['email'] ?? ''),
+            'phone'    => trim($_POST['phone'] ?? ''),
             'password' => $_POST['password'] ?? '',
-            'role_id'  => (int) ($_POST['role_id'] ?? 0),
-            'plan'     => trim($_POST['plan'] ?? 'Gratis'),
             'status'   => $_POST['status'] ?? 'active',
         ];
 
@@ -90,7 +84,6 @@ class UserController
             'name'     => 'required|min:2|max:100',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'role_id'  => 'required|numeric',
         ]);
 
         if (!$validator->validate($data)) {
@@ -100,10 +93,14 @@ class UserController
             return;
         }
 
-        $this->userModel->create($data);
-        AuditLog::log('create', 'users', null, "Membuat pengguna [Paket: {$data['plan']}]: {$data['name']}");
+        // User belongs to current admin
+        $data['admin_id'] = Auth::adminId();
+        $data['role_id']  = 3; // User role
 
-        Response::redirectWith(url('users'), 'success', 'Pengguna berhasil ditambahkan.');
+        $this->userModel->create($data);
+        AuditLog::log('create', 'users', null, "Admin membuat user baru: {$data['name']}");
+
+        Response::redirectWith(url('users'), 'success', 'User berhasil ditambahkan.');
     }
 
     /**
@@ -113,20 +110,20 @@ class UserController
     {
         $user = $this->userModel->find((int) $id);
         if (!$user) {
-            Response::redirectWith(url('users'), 'error', 'Pengguna tidak ditemukan.');
+            Response::redirectWith(url('users'), 'error', 'User tidak ditemukan.');
             return;
         }
 
-        $roles = $this->roleModel->getAll();
-        $settingModel = new \App\Models\Setting();
-        $plans = json_decode($settingModel->get('page_pricing_items', '[]'), true) ?: [];
+        // Verify tenant ownership (Admin can only edit their own users)
+        if (!Auth::isSuperAdmin() && (int)$user->admin_id !== Auth::adminId()) {
+            Response::redirectWith(url('users'), 'error', 'Akses ditolak.');
+            return;
+        }
 
         View::page('users.edit', [
-            'title'     => 'Edit Pengguna',
-            'pageTitle' => 'Edit Pengguna',
+            'title'     => 'Edit User',
+            'pageTitle' => 'Edit User',
             'user'      => $user,
-            'roles'     => $roles,
-            'plans'     => $plans,
         ]);
     }
 
@@ -140,16 +137,21 @@ class UserController
         $userId = (int) $id;
         $user = $this->userModel->find($userId);
         if (!$user) {
-            Response::redirectWith(url('users'), 'error', 'Pengguna tidak ditemukan.');
+            Response::redirectWith(url('users'), 'error', 'User tidak ditemukan.');
+            return;
+        }
+
+        // Verify tenant ownership
+        if (!Auth::isSuperAdmin() && (int)$user->admin_id !== Auth::adminId()) {
+            Response::redirectWith(url('users'), 'error', 'Akses ditolak.');
             return;
         }
 
         $data = [
             'name'     => trim($_POST['name'] ?? ''),
             'email'    => trim($_POST['email'] ?? ''),
+            'phone'    => trim($_POST['phone'] ?? ''),
             'password' => $_POST['password'] ?? '',
-            'role_id'  => (int) ($_POST['role_id'] ?? 0),
-            'plan'     => trim($_POST['plan'] ?? ($user->plan ?? 'Gratis')),
             'status'   => $_POST['status'] ?? 'active',
         ];
 
@@ -171,9 +173,9 @@ class UserController
         }
 
         $this->userModel->update($userId, $data);
-        AuditLog::log('update', 'users', $userId, "Mengubah pengguna: {$data['name']}");
+        AuditLog::log('update', 'users', $userId, "Admin mengubah user: {$data['name']}");
 
-        Response::redirectWith(url('users'), 'success', 'Pengguna berhasil diperbarui.');
+        Response::redirectWith(url('users'), 'success', 'User berhasil diperbarui.');
     }
 
     /**
@@ -187,19 +189,19 @@ class UserController
         $user = $this->userModel->find($userId);
 
         if (!$user) {
-            Response::redirectWith(url('users'), 'error', 'Pengguna tidak ditemukan.');
+            Response::redirectWith(url('users'), 'error', 'User tidak ditemukan.');
             return;
         }
 
-        // Prevent deleting yourself
-        if ($userId === Auth::id()) {
-            Response::redirectWith(url('users'), 'error', 'Tidak dapat menghapus akun sendiri.');
+        // Verify tenant ownership
+        if (!Auth::isSuperAdmin() && (int)$user->admin_id !== Auth::adminId()) {
+            Response::redirectWith(url('users'), 'error', 'Akses ditolak.');
             return;
         }
 
         $this->userModel->delete($userId);
-        AuditLog::log('delete', 'users', $userId, "Menghapus pengguna: {$user->name}");
+        AuditLog::log('delete', 'users', $userId, "Admin menghapus user: {$user->name}");
 
-        Response::redirectWith(url('users'), 'success', 'Pengguna berhasil dihapus.');
+        Response::redirectWith(url('users'), 'success', 'User berhasil dihapus.');
     }
 }
