@@ -167,7 +167,55 @@ if ($pdo) {
         // Ignore
     }
 
-    // 5. Ensure Storage & Upload Directories
+    // 5. Ensure Multi-SaaS Roles (Super Admin=1, Admin=2, User=3)
+    try {
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
+
+        // Hindari collision duplicate key nama unik
+        $pdo->exec("UPDATE `roles` SET `name` = CONCAT(`name`, '_legacy_', `id`) WHERE `id` NOT IN (1, 2, 3) AND `name` IN ('Super Admin', 'Admin', 'User')");
+
+        $stmtRole = $pdo->prepare("INSERT INTO `roles` (`id`, `name`, `permissions`) VALUES
+            (1, 'Super Admin', '*'),
+            (2, 'Admin', '[\"forms\",\"templates\",\"documents\",\"responses\",\"users\",\"settings\"]'),
+            (3, 'User', '[\"forms\",\"responses\"]')
+            ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `permissions` = VALUES(`permissions`)");
+        $stmtRole->execute();
+
+        // Update old user role_id references
+        $pdo->exec("UPDATE `users` SET `role_id` = 3 WHERE `role_id` NOT IN (1, 2, 3) OR `role_id` IS NULL");
+        $pdo->exec("DELETE FROM `roles` WHERE `id` NOT IN (1, 2, 3)");
+
+        // Ensure Super Admin in `admins` table
+        $checkAdmin = $pdo->query("SELECT id FROM `admins` WHERE `id` = 1 OR `email` = 'admin@asrform.app'")->fetch();
+        if (!$checkAdmin) {
+            $defaultPassword = password_hash('admin123', PASSWORD_BCRYPT);
+            $pdo->exec("INSERT INTO `admins` (`id`, `name`, `email`, `phone`, `password`, `role_id`, `status`, `plan`) VALUES
+                (1, 'Super Administrator', 'admin@asrform.app', '', '{$defaultPassword}', 1, 'active', 'Enterprise')");
+        } else {
+            $pdo->exec("UPDATE `admins` SET `role_id` = 1, `status` = 'active' WHERE `id` = " . (int)$checkAdmin->id);
+        }
+
+        // Drop legacy FK on audit_logs if still attached
+        try {
+            $pdo->exec("ALTER TABLE `audit_logs` DROP FOREIGN KEY `audit_logs_ibfk_1`");
+        } catch (\Throwable $ignored) {}
+
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
+
+        $results[] = [
+            'type' => 'success',
+            'title' => 'Sinkronisasi Roles & Akun Super Admin',
+            'desc' => '3 Role Multi-SaaS (Super Admin, Admin, User) dan akun Super Admin berhasil disinkronkan tanpa konflik duplicate entry.'
+        ];
+    } catch (\Throwable $e) {
+        $results[] = [
+            'type' => 'warning',
+            'title' => 'Sinkronisasi Roles',
+            'desc' => htmlspecialchars($e->getMessage())
+        ];
+    }
+
+    // 6. Ensure Storage & Upload Directories
     $dirs = [
         BASE_PATH . '/storage',
         BASE_PATH . '/storage/app',

@@ -9,10 +9,8 @@
 .env.safe_deploy_backup
 
 # ═══════════════════════════════════════════
-# Database & SQL Files (JANGAN KE GITHUB - PRIVATE)
+# Database Dumps & Backups (JANGAN KE GITHUB)
 # ═══════════════════════════════════════════
-/database/
-*.sql
 *.dump
 *.sqlite
 *.sqlite3
@@ -20,6 +18,11 @@
 *.bak
 *.sql.gz
 *.sql.zip
+# Ignore SQL backups except official schema & seed files
+*.sql
+!database/migration.sql
+!database/seed.sql
+!database/migrate.php
 
 # ═══════════════════════════════════════════
 # Storage & Generated User Files
