@@ -50,15 +50,24 @@ if (!function_exists('base_url')) {
         $appUrl = env('APP_URL');
         $appEnv = env('APP_ENV', 'production');
 
+        // Check if HTTPS is being used (including reverse proxy, Cloudflare & load balancer headers)
+        $isHttps = (
+            (!empty($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1')) ||
+            (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') ||
+            (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') ||
+            (!empty($_SERVER['HTTP_CF_VISITOR']) && str_contains($_SERVER['HTTP_CF_VISITOR'], 'https')) ||
+            (!empty($_SERVER['REQUEST_SCHEME']) && strtolower($_SERVER['REQUEST_SCHEME']) === 'https') ||
+            (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+        );
+
         // In production, if APP_URL is explicitly configured and not localhost, prioritize it
         if ($appEnv === 'production' && !empty($appUrl) && !str_contains($appUrl, 'localhost')) {
             $baseUrl = rtrim($appUrl, '/');
+            // If the user accessed via HTTPS, ensure baseUrl doesn't downgrade to http
+            if ($isHttps && str_starts_with($baseUrl, 'http://')) {
+                $baseUrl = 'https://' . substr($baseUrl, 7);
+            }
         } elseif (!empty($_SERVER['HTTP_HOST'])) {
-            $isHttps = (
-                (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] === '1')) ||
-                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') ||
-                (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
-            );
             $scheme = $isHttps ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'];
             
@@ -80,6 +89,9 @@ if (!function_exists('base_url')) {
             $baseUrl = $scheme . '://' . $host . $subfolder;
         } else {
             $baseUrl = rtrim($appUrl ?: 'http://localhost', '/');
+            if ($isHttps && str_starts_with($baseUrl, 'http://')) {
+                $baseUrl = 'https://' . substr($baseUrl, 7);
+            }
         }
 
         $path = ltrim($path, '/');

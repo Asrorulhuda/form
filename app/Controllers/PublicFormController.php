@@ -79,11 +79,13 @@ class PublicFormController
         $secret = env('APP_KEY', 'asr_form_public_token_secret_salt_2026');
         $today = date('Y-m-d');
         $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
         $expectedToday = hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$today}", $secret);
         $expectedYesterday = hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$yesterday}", $secret);
+        $expectedTomorrow = hash_hmac('sha256', "public_form_{$form->id}_{$form->slug}_{$tomorrow}", $secret);
 
-        return hash_equals($expectedToday, $token) || hash_equals($expectedYesterday, $token);
+        return hash_equals($expectedToday, $token) || hash_equals($expectedYesterday, $token) || hash_equals($expectedTomorrow, $token);
     }
 
     /**

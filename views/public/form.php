@@ -626,6 +626,40 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
         }
 
+        @keyframes spinLoader {
+            100% { transform: rotate(360deg); }
+        }
+        .spin-loader {
+            animation: spinLoader 0.75s linear infinite;
+        }
+
+        /* ─── Floating Toast Notification ─── */
+        .form-toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-60px);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 13px 26px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 999999;
+        }
+        .form-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .form-step-pane {
             animation: fadeInPane 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -656,6 +690,12 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
     </style>
 </head>
 <body class="<?= $hasCustomBg ? 'has-custom-bg' : '' ?>">
+
+    <!-- ─── Floating Toast Notification ─── -->
+    <div id="form-toast" class="form-toast">
+        <span id="form-toast-icon" style="font-size: 18px;">⚠️</span>
+        <span id="form-toast-text"></span>
+    </div>
 
     <?php if ($hasCustomBg): ?>
         <div class="bg-overlay-layer bg-overlay-<?= htmlspecialchars($bgOverlay) ?>"></div>
@@ -733,7 +773,7 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
         <?php endif; ?>
 
         <!-- ─── Dynamic Multi-Section Form ─── -->
-        <form method="POST" action="<?= url("form/{$form->slug}/submit") ?>" enctype="multipart/form-data" id="public-form">
+        <form method="POST" action="<?= url("form/{$form->slug}/submit") ?>" enctype="multipart/form-data" id="public-form" novalidate>
             <?= CSRF::field() ?>
             <input type="hidden" name="_form_token" value="<?= \App\Controllers\PublicFormController::generateFormToken($form) ?>">
 
@@ -919,8 +959,7 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
                                                    id="file-input-<?= e($fieldName) ?>"
                                                    name="<?= e($fieldName) ?>" 
                                                    style="display: none;" 
-                                                   onchange="handleFileInputChange(this, '<?= e($fieldName) ?>')"
-                                                   <?= $field->is_required ? 'required' : '' ?>>
+                                                   onchange="handleFileInputChange(this, '<?= e($fieldName) ?>')">
                                         </div>
                                         <?php break; ?>
 
@@ -966,7 +1005,7 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
                                     <span>&rarr;</span>
                                 </button>
                             <?php else: ?>
-                                <button type="submit" class="btn-submit-public" onclick="return validateCurrentSectionBeforeSubmit(<?= $secIndex ?>)">
+                                <button type="submit" class="btn-submit-public" id="btn-submit-public">
                                     <span>Kirim Formulir</span>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                 </button>
@@ -1004,13 +1043,31 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
         }
     }
 
+    // ─── Floating Toast Notification Helper ───
+    function showFormToast(msg, icon = '⚠️') {
+        const toast = document.getElementById('form-toast');
+        const toastText = document.getElementById('form-toast-text');
+        const toastIcon = document.getElementById('form-toast-icon');
+        if (!toast || !toastText) {
+            alert(msg);
+            return;
+        }
+        toastText.textContent = msg;
+        if (toastIcon) toastIcon.textContent = icon;
+        toast.classList.add('show');
+        clearTimeout(window._toastTimeout);
+        window._toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4500);
+    }
+
     // ─── Multi-Section Step Navigation & Client Validation ───
-    function validateSection(stepIndex) {
+    function validateSection(stepIndex, isSilent = false) {
         const stepPane = document.getElementById('step-pane-' + stepIndex);
         if (!stepPane) return true;
 
         const visibleBoxes = Array.from(stepPane.querySelectorAll('.field-box')).filter(box => {
-            return box.style.display !== 'none' && box.offsetParent !== null;
+            return box.style.display !== 'none';
         });
 
         let isStepValid = true;
@@ -1048,12 +1105,30 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
                     const input = box.querySelector('input, textarea');
                     if (!input || !input.value.trim()) {
                         isFieldValid = false;
-                        if (errorEl) errorEl.querySelector('span').textContent = 'Pertanyaan ini wajib diisi.';
+                        if (errorEl) {
+                            const span = errorEl.querySelector('span');
+                            if (span) span.textContent = 'Pertanyaan ini wajib diisi.';
+                        }
                     } else if (fieldType === 'email') {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                         if (!emailRegex.test(input.value.trim())) {
                             isFieldValid = false;
-                            if (errorEl) errorEl.querySelector('span').textContent = 'Format alamat email tidak valid.';
+                            if (errorEl) {
+                                const span = errorEl.querySelector('span');
+                                if (span) span.textContent = 'Format alamat email tidak valid.';
+                            }
+                        }
+                    }
+                }
+            } else if (fieldType === 'email') {
+                const input = box.querySelector('input[type="email"]');
+                if (input && input.value.trim()) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value.trim())) {
+                        isFieldValid = false;
+                        if (errorEl) {
+                            const span = errorEl.querySelector('span');
+                            if (span) span.textContent = 'Format alamat email tidak valid.';
                         }
                     }
                 }
@@ -1070,24 +1145,36 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
             }
         });
 
-        if (!isStepValid && firstInvalidElement) {
+        if (!isStepValid && firstInvalidElement && !isSilent) {
             firstInvalidElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const focusTarget = firstInvalidElement.querySelector('input, select, textarea');
+            const focusTarget = firstInvalidElement.querySelector('input:not([type="hidden"]):not([style*="display: none"]), select, textarea');
             if (focusTarget) focusTarget.focus();
+            showFormToast('Mohon lengkapi pertanyaan wajib yang belum diisi.');
         }
 
         return isStepValid;
     }
 
     function validateAndGoToStep(fromStep, toStep) {
-        if (!validateSection(fromStep)) {
+        if (!validateSection(fromStep, false)) {
             return false;
         }
         goToStep(toStep);
     }
 
-    function validateCurrentSectionBeforeSubmit(secIndex) {
-        return validateSection(secIndex);
+    function validateAllSections() {
+        for (let i = 0; i < totalSections; i++) {
+            const isValid = validateSection(i, true);
+            if (!isValid) {
+                if (currentStep !== i) {
+                    goToStep(i);
+                }
+                validateSection(i, false);
+                showFormToast(`Terdapat pertanyaan wajib yang belum diisi di Bagian ${i + 1}.`);
+                return false;
+            }
+        }
+        return true;
     }
 
     function goToStep(stepIndex) {
@@ -1124,6 +1211,18 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
 
         // Re-evaluate conditional logic for the newly opened step
         evaluateConditionalLogic();
+
+        // Re-initialize any signatures inside the newly shown step pane
+        document.querySelectorAll('#step-pane-' + stepIndex + ' canvas[id^="canvas-"]').forEach(canvas => {
+            if (canvas.offsetWidth > 0 && canvas.width !== canvas.offsetWidth) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+            }
+        });
 
         // Smooth scroll to top of form
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1295,6 +1394,28 @@ $hasCustomBg = !empty($bgImageUrl) || (!empty($bgPreset) && $bgPreset !== 'defau
                 evaluateConditionalLogic();
                 const fieldBox = e.target.closest('.field-box');
                 if (fieldBox) fieldBox.classList.remove('is-invalid-box');
+            });
+            form.addEventListener('submit', (e) => {
+                if (!validateAllSections()) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Visual loading state on submit button
+                const submitBtn = document.getElementById('btn-submit-public') || document.querySelector('.btn-submit-public');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.75';
+                    submitBtn.style.cursor = 'wait';
+                    submitBtn.style.pointerEvents = 'none';
+                    submitBtn.innerHTML = `
+                        <svg class="spin-loader" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-linecap="round"></path>
+                        </svg>
+                        <span>Mengirim jawaban...</span>
+                    `;
+                }
             });
         }
     });
