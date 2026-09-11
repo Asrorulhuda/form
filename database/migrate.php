@@ -55,6 +55,42 @@ if (file_exists($migrationFile)) {
     echo "[!] File database/migration.sql tidak ditemukan!\n";
 }
 
+// 1.5 Auto-upgrade existing tables with Multi-SaaS columns if missing
+echo "1.5 Memeriksa & Mengupgrade Kolom Multi-SaaS... ";
+try {
+    $columnUpgrades = [
+        ['numbering_configs', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+        ['users', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Belongs to which admin/tenant' AFTER `id`"],
+        ['forms', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+        ['document_templates', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+        ['document_templates', 'content', "LONGTEXT DEFAULT NULL COMMENT 'HTML template content' AFTER `version`"],
+        ['documents', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+        ['file_uploads', 'admin_id', "INT UNSIGNED DEFAULT NULL AFTER `id`"],
+        ['payments', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Admin tenant' AFTER `id`"],
+        ['audit_logs', 'user_type', "VARCHAR(20) DEFAULT 'admin' AFTER `user_id`"],
+        ['audit_logs', 'user_name', "VARCHAR(100) DEFAULT NULL AFTER `user_type`"],
+    ];
+
+    foreach ($columnUpgrades as [$tbl, $col, $def]) {
+        $tableExists = $pdo->query("SHOW TABLES LIKE '{$tbl}'")->fetch();
+        if ($tableExists) {
+            $colExists = $pdo->query("SHOW COLUMNS FROM `{$tbl}` LIKE '{$col}'")->fetch();
+            if (!$colExists) {
+                $pdo->exec("ALTER TABLE `{$tbl}` ADD COLUMN `{$col}` {$def}");
+            }
+        }
+    }
+
+    // Drop legacy FK on audit_logs if still attached
+    try {
+        $pdo->exec("ALTER TABLE `audit_logs` DROP FOREIGN KEY `audit_logs_ibfk_1`");
+    } catch (\Throwable $ignored) {}
+
+    echo "[ OK - BERHASIL ]\n";
+} catch (\Throwable $e) {
+    echo "[ GAGAL ]\n  Error: " . $e->getMessage() . "\n";
+}
+
 // 2. Run Master Seed Data
 $seedFile = __DIR__ . '/seed.sql';
 if (file_exists($seedFile)) {

@@ -167,6 +167,43 @@ if ($pdo) {
         // Ignore
     }
 
+    // 4.5 Ensure Multi-SaaS Columns on Existing Tables
+    try {
+        $columnUpgrades = [
+            ['numbering_configs', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+            ['users', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Belongs to which admin/tenant' AFTER `id`"],
+            ['forms', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+            ['document_templates', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+            ['document_templates', 'content', "LONGTEXT DEFAULT NULL COMMENT 'HTML template content' AFTER `version`"],
+            ['documents', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Tenant owner' AFTER `id`"],
+            ['file_uploads', 'admin_id', "INT UNSIGNED DEFAULT NULL AFTER `id`"],
+            ['payments', 'admin_id', "INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Admin tenant' AFTER `id`"],
+            ['audit_logs', 'user_type', "VARCHAR(20) DEFAULT 'admin' AFTER `user_id`"],
+            ['audit_logs', 'user_name', "VARCHAR(100) DEFAULT NULL AFTER `user_type`"],
+        ];
+
+        foreach ($columnUpgrades as [$tbl, $col, $def]) {
+            $tableExists = $pdo->query("SHOW TABLES LIKE '{$tbl}'")->fetch();
+            if ($tableExists) {
+                $colExists = $pdo->query("SHOW COLUMNS FROM `{$tbl}` LIKE '{$col}'")->fetch();
+                if (!$colExists) {
+                    $pdo->exec("ALTER TABLE `{$tbl}` ADD COLUMN `{$col}` {$def}");
+                }
+            }
+        }
+        $results[] = [
+            'type' => 'success',
+            'title' => 'Pemeriksaan Kolom Multi-SaaS (admin_id)',
+            'desc' => 'Semua kolom pemisahan tenant (admin_id pada form, template, numbering, dsb) telah dipastikan ada.'
+        ];
+    } catch (\Throwable $e) {
+        $results[] = [
+            'type' => 'warning',
+            'title' => 'Pemeriksaan Kolom Multi-SaaS',
+            'desc' => htmlspecialchars($e->getMessage())
+        ];
+    }
+
     // 5. Ensure Multi-SaaS Roles (Super Admin=1, Admin=2, User=3)
     try {
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
